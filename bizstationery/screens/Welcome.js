@@ -18,7 +18,7 @@ export default function WelcomeScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <ImageBackground
-        source={require('../assets/media/welcome (2).png')}
+        source={require('../assets/media/welcomeImage.png')}
         style={[styles.backgroundImage, { width, height: increasedHeight }]} // Use dimensions dynamically
         resizeMode="cover"
       >
