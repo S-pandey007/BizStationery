@@ -1,12 +1,16 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import React, { useContext } from 'react';
+import { View, Text, Button } from 'react-native';
+import { AuthContext } from '../AuthProvider';
 
-const Home = () => {
+const HomeScreen = ({ navigation }) => {
+  const { logout } = useContext(AuthContext);
+
   return (
     <View>
-      <Text>Home</Text>
+      <Text>Welcome to Home</Text>
+      <Button title="Logout" onPress={() => logout()} />
     </View>
-  )
-}
+  );
+};
 
-export default Home
+export default HomeScreen;

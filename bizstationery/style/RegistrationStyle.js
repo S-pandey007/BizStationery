@@ -86,6 +86,21 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginLeft: 10,
   },
+
+  // Added for OTP verification
+  sendOTPButton: {
+    backgroundColor: '#423CF5',
+    paddingTop: 5,
+    width: 90,
+    borderRadius: 10,
+  },
+
+  gstinButton:{
+    backgroundColor: '#423CF5',
+    paddingTop: 5,
+    width: 123,
+    borderRadius: 10,
+  }
 });
 
 export default styles;

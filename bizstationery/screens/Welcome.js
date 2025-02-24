@@ -55,6 +55,12 @@ export default function WelcomeScreen() {
                 </LinearGradient>
               )}
             </Pressable>
+
+            <Pressable onPress={() => navigation.navigate('Login')}>
+            <Text style={[styles.subtitle,{color:"white",marginTop:5}]}>
+              Already have an account?
+            </Text>
+            </Pressable>
           </View>
         </LinearGradient>
       </ImageBackground>
