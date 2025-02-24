@@ -3,6 +3,7 @@ import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthContext, AuthProvider } from './AuthProvider';
+import { createDrawerNavigator } from "@react-navigation/drawer";
 
 import LoginScreen from './screens/Login';
 import RegisterScreen from './screens/Registration';
@@ -34,11 +35,11 @@ const ProtectedRoute = ({ navigation, children }) => {
   return user ? children : null;
 };
 
-export default function Navigation() {
+export default  function Navigation() {
   return (
     <AuthProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Welcome">
+        <Stack.Navigator initialRouteName="Home">
           {/* Public Routes */}
           <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
@@ -60,3 +61,7 @@ export default function Navigation() {
     </AuthProvider>
   );
 }
+
+
+const Drawer = createDrawerNavigator();
+
