@@ -15,6 +15,7 @@ import RegisterScreen from "./screens/Registration";
 import HomeScreen from "./screens/Home";
 import WelcomeScreen from "./screens/Welcome";
 import CategoryScreen from "./screens/Category";
+import ProductCustomizationRequest from "./screens/ProductCustomizationRequest";
 
 import MenuScreen from "./screens/Menu"; // Create this file
 import ProfileScreen from "./screens/Profile"; // Create this file
@@ -171,6 +172,12 @@ export default function Navigation() {
             name="Category"
             component={CategoryScreen}
             options={{ headerShown: false }}/>
+
+          <Stack.Screen
+          name="ProductCustomization"
+          component={ProductCustomizationRequest}
+          options={{ headerShown: false }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>

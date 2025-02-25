@@ -8,8 +8,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // For icons
 import styles from '../style/CartStyle'; // Import styles from the separate file
-
+import { useNavigation } from '@react-navigation/native';
 const CartScreen = () => {
+
+  const navigation = useNavigation();
   // Dummy product data for the cart (initially with 2 items)
   const [cartItems, setCartItems] = useState([
     {
@@ -93,23 +95,28 @@ const CartScreen = () => {
             <View style={styles.productDetails}>
               <Text style={styles.productName}>{item.name}</Text>
               <Text style={styles.productPrice}>
-                ₹{item.price.toFixed(2)} <Text style={styles.originalPrice}>M.R.P.: ₹{item.originalPrice.toFixed(2)}</Text>
+                ₹{item.price.toFixed(2)}{" "}
+                <Text style={styles.originalPrice}>
+                  M.R.P.: ₹{item.originalPrice.toFixed(2)}
+                </Text>
               </Text>
-              <Text style={styles.productMeta}>Colour: {item.color} | Size: {item.size}</Text>
+              <Text style={styles.productMeta}>
+                Colour: {item.color} | Size: {item.size}
+              </Text>
               <Text style={styles.productStatus}>
-                {item.inStock ? 'In stock' : 'Out of stock'}
+                {item.inStock ? "In stock" : "Out of stock"}
               </Text>
               <View style={styles.quantityContainer}>
                 <TouchableOpacity
                   style={styles.quantityButton}
-                  onPress={() => handleQuantityChange(item.id, 'decrease')}
+                  onPress={() => handleQuantityChange(item.id, "decrease")}
                 >
                   <Text style={styles.quantityButtonText}>-</Text>
                 </TouchableOpacity>
                 <Text style={styles.quantityText}>{item.quantity}</Text>
                 <TouchableOpacity
                   style={styles.quantityButton}
-                  onPress={() => handleQuantityChange(item.id, 'increase')}
+                  onPress={() => handleQuantityChange(item.id, "increase")}
                 >
                   <Text style={styles.quantityButtonText}>+</Text>
                 </TouchableOpacity>
@@ -119,11 +126,16 @@ const CartScreen = () => {
                 >
                   <Text style={styles.removeButtonText}>Delete</Text>
                 </TouchableOpacity>
-                
               </View>
               <TouchableOpacity style={styles.saveButton}>
-                  <Text style={styles.saveButtonText}>Save for later</Text>
-                </TouchableOpacity>
+                <Text style={styles.saveButtonText}>Save for later</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("ProductCustomization")}
+                style={styles.saveButton}
+              >
+                <Text style={styles.saveButtonText}>Customization</Text>
+              </TouchableOpacity>
             </View>
           </View>
         ))}
@@ -136,11 +148,15 @@ const CartScreen = () => {
           </View>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Delivery:</Text>
-            <Text style={styles.summaryValue}>₹{deliveryCharges.toFixed(2)}</Text>
+            <Text style={styles.summaryValue}>
+              ₹{deliveryCharges.toFixed(2)}
+            </Text>
           </View>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Total:</Text>
-            <Text style={styles.summaryValue}>₹{(subtotal + deliveryCharges).toFixed(2)}</Text>
+            <Text style={styles.summaryValue}>
+              ₹{(subtotal + deliveryCharges).toFixed(2)}
+            </Text>
           </View>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Promotion Applied:</Text>
@@ -148,10 +164,15 @@ const CartScreen = () => {
           </View>
           <View style={styles.summaryTotal}>
             <Text style={styles.summaryTotalLabel}>Order Total:</Text>
-            <Text style={styles.summaryTotalValue}>₹{orderTotal.toFixed(2)}</Text>
+            <Text style={styles.summaryTotalValue}>
+              ₹{orderTotal.toFixed(2)}
+            </Text>
           </View>
           <TouchableOpacity style={styles.proceedButton}>
-            <Text style={styles.proceedButtonText}>Proceed to Buy ({cartItems.length} item{cartItems.length > 1 ? 's' : ''})</Text>
+            <Text style={styles.proceedButtonText}>
+              Proceed to Buy ({cartItems.length} item
+              {cartItems.length > 1 ? "s" : ""})
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -165,7 +186,9 @@ const CartScreen = () => {
             <Text style={styles.savedCategoryText}>Mouse pads (1)</Text>
           </View>
           <View style={styles.savedCategory}>
-            <Text style={styles.savedCategoryText}>Notebook computer stan...</Text>
+            <Text style={styles.savedCategoryText}>
+              Notebook computer stan...
+            </Text>
           </View>
           <View style={styles.savedCategory}>
             <Text style={styles.savedCategoryText}>Laptops (1)</Text>
