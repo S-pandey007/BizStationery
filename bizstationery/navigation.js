@@ -14,6 +14,7 @@ import LoginScreen from "./screens/Login";
 import RegisterScreen from "./screens/Registration";
 import HomeScreen from "./screens/Home";
 import WelcomeScreen from "./screens/Welcome";
+import CategoryScreen from "./screens/Category";
 
 import MenuScreen from "./screens/Menu"; // Create this file
 import ProfileScreen from "./screens/Profile"; // Create this file
@@ -120,14 +121,15 @@ const TabNavigator = () => {
         component={MenuScreen}
         options={{ headerShown: false }}
       />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ headerShown: false }}
-      />
+      
       <Tab.Screen
         name="Cart"
         component={CartScreen}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>
@@ -165,6 +167,10 @@ export default function Navigation() {
               </ProtectedRoute>
             )}
           </Stack.Screen>
+          <Stack.Screen
+            name="Category"
+            component={CategoryScreen}
+            options={{ headerShown: false }}/>
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>

@@ -11,8 +11,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import styles from '../style/HomeStyle';
-
+import { useNavigation } from "@react-navigation/native";
 const HomeScreen = () => {
+  const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [cartCount, setCartCount] = useState(3);
 
@@ -117,7 +118,10 @@ const HomeScreen = () => {
           <View>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Explore Our Collections</Text>
-              <TouchableOpacity style={styles.categoryButton}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Category")}
+                style={styles.categoryButton}
+              >
                 <Text style={styles.categoryButtonText}>Categories</Text>
               </TouchableOpacity>
             </View>
@@ -189,7 +193,10 @@ const HomeScreen = () => {
       <View style={styles.header}>
         <Text style={styles.headerText}>Hi Shubham</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.searchButton} onPress={handleSearchPress}>
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={handleSearchPress}
+          >
             <Ionicons name="search-outline" size={30} color="#6B48FF" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.cartButton}>
@@ -200,7 +207,10 @@ const HomeScreen = () => {
               </View>
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.profileButton}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Profile")}
+            style={styles.profileButton}
+          >
             <Ionicons name="person-circle-outline" size={40} color="#6B48FF" />
           </TouchableOpacity>
         </View>
