@@ -5,7 +5,8 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5', // Light gray background for the container
+    // backgroundColor: '#F5F5F5' // Light gray background for the container
+    backgroundColor: '#fff', // Light gray background for the container
   },
   header: {
     flexDirection: 'row',
