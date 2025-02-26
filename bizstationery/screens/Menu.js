@@ -25,12 +25,41 @@ const MenuScreen = ({ navigation }) => {
     { title: 'Help & Support', icon: 'help-circle-outline' },
     { title: 'About BizStationery', icon: 'information-circle-outline' },
     { title: 'Settings', icon: 'settings-outline' },
+    { title: 'Logout', icon: 'log-out-outline' },
   ];
 
   // Handle menu item press (example navigation, customizable)
   const handlePress = (item) => {
-    console.log(`${item.title} pressed`);
-    // Add navigation logic here (e.g., navigation.navigate(item.title))
+    if (item.title === 'Logout') {
+      // Show confirmation alert before logging out
+      Alert.alert(
+        'Confirm Logout',
+        'Are you sure you want to log out?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Logout',
+            onPress: () => handleLogout(),
+            style: 'destructive',
+          },
+        ],
+        { cancelable: true }
+      );
+    } else {
+      console.log(`${item.title} pressed`);
+    }
+  };
+
+  const handleLogout = () => {
+    setLoading(true); // Show loading state
+    // Clear user data from AuthContext
+    setUser(null);
+    // Navigate to Welcome or Login screen
+    navigation.replace('Welcome'); // Assuming 'Welcome' is the initial screen
+    setLoading(false); // Hide loading state
   };
 
   return (

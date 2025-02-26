@@ -5,8 +5,7 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: '#F5F5F5' // Light gray background for the container
-    backgroundColor: '#fff', // Light gray background for the container
+    backgroundColor: '#F5F5F5', // Light gray background for the container
   },
   header: {
     flexDirection: 'row',
@@ -56,8 +55,8 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
-    marginTop: 120, // Space for the fixed header
-    marginBottom: 40, // Added bottom margin for consistency
+    marginTop: 120,
+    marginBottom:50 // Space for the fixed header
   },
   contentContainer: {
     paddingBottom: 20,
@@ -86,7 +85,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   editSectionButton: {
-    backgroundColor: '#4CAF50', // Green for edit buttons, matching the screenshot
+    backgroundColor: '#4CAF50', // Green for edit buttons
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 8,
@@ -165,6 +164,94 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginBottom: 10,
   },
+  modal: {
+    justifyContent: 'flex-end',
+    margin: 0,
+  },
+  modalScroll: {
+    maxHeight: '100%',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 15,
+  },
+  modalSubTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#333',
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  modalInput: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 10,
+    width: '90%',
+  },
+  imagePickerButton: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  imagePickerText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  pickerContainer: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 8,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#EEE',
+  },
+  picker: {
+    height: 50,
+    color: '#333',
+  },
+  modalButton: {
+    backgroundColor: '#6B48FF',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  modalCloseButton: {
+    backgroundColor: '#F5F5F5',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  modalCloseButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
+
+  socialInputContainer:{
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    gap: 10
+  }
 });
 
 export default styles;
