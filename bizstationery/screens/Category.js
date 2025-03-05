@@ -1,9 +1,11 @@
 // Category.js
-import React from 'react';
+import React, { useState,useEffect } from 'react';
 import { View, Text, FlatList, Image, Pressable } from 'react-native';
 import styles from '../style/Categorystyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from "@react-navigation/native";
+import {fetchCategories} from '../api/apiService';
+import {useSelector , useDispatch} from 'react-redux'
 
 const stationeryItems = [
   { id: '1', title: 'Notebook' },
@@ -30,17 +32,28 @@ const stationeryItems = [
 
 const CategoryScreen = () => {
     const navigation = useNavigation(); 
+    // fetch categories data
+        const dispatch = useDispatch()
+        const {categoryList} = useSelector((state)=> state.categories)
+        const CategoryData = categoryList.category
+        useEffect(() => {
+          dispatch(fetchCategories())
+        },[dispatch])
+      
+        useEffect(()=>{
+          console.log('category list:',categoryList.category);
+          // console.log(categoryList.category[0].image_link)
+          // console.log(categoryList.category[0].category)
+        },[categoryList])
 
-  const handlePress = (item) => {
-    alert(`You selected: ${item.title}`);
-  };
-
+ 
   const renderItem = ({ item }) => (
-    <Pressable style={styles.itemContainer} onPress={() => handlePress(item)}>
-      <Image source={{ uri: 'https://th.bing.com/th/id/OIP.iyX8lP4wxAZzW7Fa3JWhawHaGD?rs=1&pid=ImgDetMain' }} style={styles.image} />
-      <Text style={styles.title}>{item.title}</Text>
+    <Pressable style={styles.itemContainer} onPress={() => navigation.navigate('CategoryDetail', { category: item.category })}>
+      <Image source={{ uri:item.image_link}} style={styles.image} />
+      <Text style={styles.title}>{item.category}</Text>
     </Pressable>
   );
+
 
   return (
     <View style={styles.container}>
@@ -51,8 +64,8 @@ const CategoryScreen = () => {
         <Text style={styles.header}>Stationery Items</Text>
       </View>
       <FlatList
-        data={stationeryItems}
-        keyExtractor={(item) => item.id}
+        data={CategoryData}
+        // keyExtractor={(item) => item.id}
         renderItem={renderItem}
         numColumns={2}
       />

@@ -1,64 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   Image,
   ScrollView,
   TouchableOpacity,
+  Pressable,
+  Modal,
+  FlatList
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // For icons
 import styles from '../style/CartStyle'; // Import styles from the separate file
 import { useNavigation } from '@react-navigation/native';
-const CartScreen = () => {
+import {useSelector,useDispatch} from 'react-redux'
+import {updateQuantity,removeFromCart} from '../redux/slice/cartSlice'
+import AntDesign from '@expo/vector-icons/AntDesign';
 
+const CartScreen = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const cartItems = useSelector((state) => state.cart.items);
+  const [eachItemCost, setEachItemCost] = useState([]);
+  const [orderDetailModal, setOrderDetailModal] = useState(false);
   // Dummy product data for the cart (initially with 2 items)
-  const [cartItems, setCartItems] = useState([
-    {
-      id: '1',
-      name: 'iQOO Z9 5G (Brushed Green, 8GB RAM, 128GB Storage)',
-      price: 18499.00,
-      originalPrice: 24999.00,
-      image: 'https://via.placeholder.com/150', // Replace with actual product image
-      quantity: 1,
-      color: 'Brushed Green',
-      size: '8GB RAM, 128GB Storage',
-      inStock: true,
-    },
-    {
-      id: '2',
-      name: 'realme GT 7 Pro (Galaxy Grey, 12GB+256GB) | India',
-      price: 54998.00,
-      originalPrice: 69999.00,
-      image: 'https://via.placeholder.com/150', // Replace with actual product image
-      quantity: 1,
-      color: 'Galaxy Grey',
-      size: '12GB+256GB',
-      inStock: true,
-    },
-  ]);
+  // const [cartItems, setCartItems] = useState([
+  //   {
+  //     id: '1',
+  //     name: 'iQOO Z9 5G (Brushed Green, 8GB RAM, 128GB Storage)',
+  //     price: 18499.00,
+  //     originalPrice: 24999.00,
+  //     image: 'https://via.placeholder.com/150', // Replace with actual product image
+  //     quantity: 1,
+  //     color: 'Brushed Green',
+  //     size: '8GB RAM, 128GB Storage',
+  //     inStock: true,
+  //   },
+  //   {
+  //     id: '2',
+  //     name: 'realme GT 7 Pro (Galaxy Grey, 12GB+256GB) | India',
+  //     price: 54998.00,
+  //     originalPrice: 69999.00,
+  //     image: 'https://via.placeholder.com/150', // Replace with actual product image
+  //     quantity: 1,
+  //     color: 'Galaxy Grey',
+  //     size: '12GB+256GB',
+  //     inStock: true,
+  //   },
+  // ]);
 
   // Handle quantity change (increase/decrease)
   const handleQuantityChange = (id, type) => {
-    setCartItems(cartItems.map(item =>
-      item.id === id
-        ? {
-            ...item,
-            quantity: type === 'increase' ? item.quantity + 1 : Math.max(1, item.quantity - 1),
-          }
-        : item
-    ));
+    const item = cartItems.find((item) => item.id === id);
+    if (item) {
+      const newQuantity =
+        type === "increase"
+          ? item.quantity + 25
+          : Math.max(25, item.quantity - 25);
+      dispatch(updateQuantity({ id, quantity: newQuantity }));
+    }
   };
 
   // Handle item removal
   const handleRemoveItem = (id) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+    dispatch(removeFromCart(id));
   };
 
   // Calculate totals
-  const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const subtotal = cartItems.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
   const taxes = subtotal * 0.18; // Assuming 18% GST for simplicity
-  const deliveryCharges = 158.00; // Fixed delivery charge as per the screenshot
+  const deliveryCharges = 158.0; // Fixed delivery charge as per the screenshot
   const orderTotal = subtotal + taxes + deliveryCharges;
 
   // Render empty cart message or product list
@@ -69,134 +82,238 @@ const CartScreen = () => {
           <Text style={styles.headerText}>Cart</Text>
         </View>
         <View style={styles.emptyCartContainer}>
-          <Text style={styles.emptyCartText}>No products added to your cart.</Text>
+          <Text style={styles.emptyCartText}>
+            No products added to your cart.
+          </Text>
         </View>
       </View>
     );
   }
 
+  // prize calculation 
+  // console.log(cartItems);
+  
+
+const calculatePrize = () => {
+  const updatedCosts = cartItems.map((item) => {
+    const totalWithOutGST = item.price * item.quantity;
+    const GST = (totalWithOutGST * item.gst_rate) / 100;
+    const FinalPrize = totalWithOutGST + GST;
+
+    console.log(
+      `Item price: ${item.price} * Item quantity: ${item.quantity} = ${totalWithOutGST}`
+    );
+    console.log("totalWithOutGST:", totalWithOutGST);
+    console.log(`${item.gst_rate}% of ${totalWithOutGST} is ${GST}`);
+    console.log("FinalPrize:", FinalPrize);
+
+    return {
+      price: item.price,
+      quantity: item.quantity,
+      totalWithOutGST,
+      gst_rate: item.gst_rate,
+      GST,
+      FinalPrize,
+      name: item.product_name,
+    };
+  });
+
+  setEachItemCost(updatedCosts);
+};
+useEffect(() => {
+  calculatePrize();
+}, [cartItems]); // Only re-run when cartItems changes
+
+console.log("eachItemCost :", eachItemCost);
+const totalOrderPrize = eachItemCost.reduce((acc, item) => acc + item.FinalPrize, 0);
+console.log("totalOrderPrize :", totalOrderPrize);
+
+  
+
+const renderItem = ({ item, index }) => {
   return (
-    <View style={styles.container}>
-      {/* Fixed Header (outside ScrollView) */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Cart</Text>
-      </View>
+    <View
+      style={[
+        styles.tableRow ,index % 2 === 0 ?  styles.evenRow: styles.oddRow]}
+    >
+      <Text style={[styles.tableCell, { flex: 1 }]}>{index + 1}</Text>
+        <Text style={[styles.tableCell, { flex: 3 }]}>{item.name}</Text>
+        <Text style={[styles.tableCell, { flex: 2 }]}>{item.price.toFixed(2)}</Text>
+        <Text style={[styles.tableCell, { flex: 1 }]}>{item.quantity}</Text>
+        <Text style={[styles.tableCell, { flex: 1 }]}>{item.gst_rate}</Text>
+        <Text style={[styles.tableCell, { flex: 2 }]}>{item.FinalPrize.toFixed(2)}</Text>
 
-      {/* Scrollable Content */}
-      <ScrollView
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Products List */}
-        {cartItems.map((item) => (
-          <View key={item.id} style={styles.productItem}>
-            <Image source={{ uri: item.image }} style={styles.productImage} />
-            <View style={styles.productDetails}>
-              <Text style={styles.productName}>{item.name}</Text>
-              <Text style={styles.productPrice}>
-                ₹{item.price.toFixed(2)}{" "}
-                <Text style={styles.originalPrice}>
-                  M.R.P.: ₹{item.originalPrice.toFixed(2)}
-                </Text>
-              </Text>
-              <Text style={styles.productMeta}>
-                Colour: {item.color} | Size: {item.size}
-              </Text>
-              <Text style={styles.productStatus}>
-                {item.inStock ? "In stock" : "Out of stock"}
-              </Text>
-              <View style={styles.quantityContainer}>
-                <TouchableOpacity
-                  style={styles.quantityButton}
-                  onPress={() => handleQuantityChange(item.id, "decrease")}
-                >
-                  <Text style={styles.quantityButtonText}>-</Text>
-                </TouchableOpacity>
-                <Text style={styles.quantityText}>{item.quantity}</Text>
-                <TouchableOpacity
-                  style={styles.quantityButton}
-                  onPress={() => handleQuantityChange(item.id, "increase")}
-                >
-                  <Text style={styles.quantityButtonText}>+</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => handleRemoveItem(item.id)}
-                >
-                  <Text style={styles.removeButtonText}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity style={styles.saveButton}>
-                <Text style={styles.saveButtonText}>Save for later</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => navigation.navigate("ProductCustomization")}
-                style={styles.saveButton}
-              >
-                <Text style={styles.saveButtonText}>Customization</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-
-        {/* Cart Summary */}
-        <View style={styles.summaryContainer}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Items:</Text>
-            <Text style={styles.summaryValue}>₹{subtotal.toFixed(2)}</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Delivery:</Text>
-            <Text style={styles.summaryValue}>
-              ₹{deliveryCharges.toFixed(2)}
-            </Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Total:</Text>
-            <Text style={styles.summaryValue}>
-              ₹{(subtotal + deliveryCharges).toFixed(2)}
-            </Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Promotion Applied:</Text>
-            <Text style={styles.summaryValue}>-₹{taxes.toFixed(2)}</Text>
-          </View>
-          <View style={styles.summaryTotal}>
-            <Text style={styles.summaryTotalLabel}>Order Total:</Text>
-            <Text style={styles.summaryTotalValue}>
-              ₹{orderTotal.toFixed(2)}
-            </Text>
-          </View>
-          <TouchableOpacity style={styles.proceedButton}>
-            <Text style={styles.proceedButtonText}>
-              Proceed to Buy ({cartItems.length} item
-              {cartItems.length > 1 ? "s" : ""})
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Saved for Later Section (Placeholder) */}
-        <View style={styles.savedSection}>
-          <Text style={styles.savedTitle}>Saved for Later (4 items)</Text>
-          <View style={styles.savedCategory}>
-            <Text style={styles.savedCategoryText}>Smartphones & basic...</Text>
-          </View>
-          <View style={styles.savedCategory}>
-            <Text style={styles.savedCategoryText}>Mouse pads (1)</Text>
-          </View>
-          <View style={styles.savedCategory}>
-            <Text style={styles.savedCategoryText}>
-              Notebook computer stan...
-            </Text>
-          </View>
-          <View style={styles.savedCategory}>
-            <Text style={styles.savedCategoryText}>Laptops (1)</Text>
-          </View>
-        </View>
-      </ScrollView>
     </View>
   );
+};
+
+return (
+  <View style={styles.container}>
+    {/* Fixed Header (outside ScrollView) */}
+    <View style={styles.header}>
+      <Text style={styles.headerText}>Cart</Text>
+    </View>
+
+    {/* Scrollable Content */}
+    <ScrollView
+      style={styles.scrollContainer}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Products List */}
+      {cartItems.map((item) => (
+        <View key={item.id} style={styles.productItem}>
+          <Image
+            source={{ uri: item.image_link }}
+            style={styles.productImage}
+          />
+          <View style={styles.productDetails}>
+            <Text
+              onPress={() =>
+                navigation.navigate("ProductDetail", { product: item.id })
+              }
+              style={styles.productName}
+            >
+              {item.product_name}
+            </Text>
+            <Text style={styles.productPrice}>
+              {/* ₹{item.price.toFixed(2)} */}₹{item.price}
+              {/* <Text style={styles.originalPrice}>
+                  M.R.P.: ₹{item.originalPrice.toFixed(2)}
+                </Text> */}
+            </Text>
+            {/* <Text style={styles.productMeta}>
+                Colour: {item.color} | Size: {item.size}
+              </Text> */}
+            {/* <Text style={styles.productStatus}>
+                {item.inStock ? "In stock" : "Out of stock"}
+              </Text> */}
+            <View style={styles.quantityContainer}>
+              <TouchableOpacity
+                style={styles.quantityButton}
+                onPress={() => handleQuantityChange(item.id, "decrease")}
+              >
+                <Text style={styles.quantityButtonText}>-</Text>
+              </TouchableOpacity>
+              <Text style={styles.quantityText}>{item.quantity}</Text>
+              <TouchableOpacity
+                style={styles.quantityButton}
+                onPress={() => handleQuantityChange(item.id, "increase")}
+              >
+                <Text style={styles.quantityButtonText}>+</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.removeButton}
+                onPress={() => handleRemoveItem(item.id)}
+              >
+                <Text style={styles.removeButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.saveButton}>
+              <Text style={styles.saveButtonText}>Save for later</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("ProductCustomization", { id: item.id })
+              }
+              style={styles.saveButton}
+            >
+              <Text style={styles.saveButtonText}>Customization</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ))}
+
+      {/* Cart Summary */}
+      <View style={styles.summaryContainer}>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryLabel}>Check Out Order Detail</Text>
+          <Pressable
+            onPress={() => setOrderDetailModal(true)}
+            style={styles.summaryValue}
+          >
+            <AntDesign name="caretdown" size={20} color="#6B48FF" />
+          </Pressable>
+        </View>
+        <View style={styles.summaryTotal}>
+          <Text style={styles.summaryTotalLabel}>Order Total:</Text>
+          <Text style={styles.summaryTotalValue}>
+            ₹{totalOrderPrize.toFixed(2)}
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.proceedButton}>
+          <Text style={styles.proceedButtonText}>
+            Proceed to Buy ({cartItems.length} item
+            {cartItems.length > 1 ? "s" : ""})
+          </Text>
+        </TouchableOpacity>
+        <View style={styles.InfoContainer}>
+          <Text style={styles.infoText}>
+          Transport expenses and transport tax are not yet added to the total amount. 
+          {/* The final cost may change once these charges are included. */}
+          </Text>
+        </View>
+      </View>
+
+      {/* Saved for Later Section (Placeholder) */}
+      <View style={styles.savedSection}>
+        <Text style={styles.savedTitle}>Saved for Later (4 items)</Text>
+        <View style={styles.savedCategory}>
+          <Text style={styles.savedCategoryText}>Smartphones & basic...</Text>
+        </View>
+        <View style={styles.savedCategory}>
+          <Text style={styles.savedCategoryText}>Mouse pads (1)</Text>
+        </View>
+        <View style={styles.savedCategory}>
+          <Text style={styles.savedCategoryText}>
+            Notebook computer stan...
+          </Text>
+        </View>
+        <View style={styles.savedCategory}>
+          <Text style={styles.savedCategoryText}>Laptops (1)</Text>
+        </View>
+      </View>
+    </ScrollView>
+
+    <Modal
+      visible={orderDetailModal}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setOrderDetailModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          {/* Header  */}
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Order Details</Text>
+            <TouchableOpacity onPress={() => setOrderDetailModal(false)}>
+              <AntDesign name="close" size={20} color="#6B48FF" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Table  */}
+          {/* table header  */}
+
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableHeader, { flex: 2 }]}>S.No</Text>
+            <Text style={[styles.tableHeader, { flex: 3 }]}>Product Name</Text>
+            <Text style={[styles.tableHeader, { flex: 2 }]}>Price (₹)</Text>
+            <Text style={[styles.tableHeader, { flex: 2 }]}>Qty</Text>
+            <Text style={[styles.tableHeader, { flex: 2 }]}>GST (%)</Text>
+            <Text style={[styles.tableHeader, { flex: 2 }]}>Total (₹)</Text>
+          </View>
+          <ScrollView style={styles.tableContainer}>
+            <FlatList
+              data={eachItemCost}
+              renderItem={renderItem}
+              scrollEnabled={false}
+            />
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  </View>
+);
 };
 
 export default CartScreen;

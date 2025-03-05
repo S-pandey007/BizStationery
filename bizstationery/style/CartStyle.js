@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   quantityButtonText: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#333",
   },
@@ -233,6 +233,101 @@ const styles = StyleSheet.create({
   savedCategoryText: {
     fontSize: 14,
     color: "#333",
+  },
+
+  // cart product details section
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "95%",
+    maxHeight: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    paddingBottom: 10,
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  tableContainer: {
+    flexGrow: 0,
+  },
+  tableRow: {
+    flexDirection: "row",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  tableHeader: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    textAlign: "center",
+  },
+
+  tableCell: {
+    fontSize: 14,
+    color: "#555",
+    textAlign: "center",
+  },
+  evenRow: {
+    backgroundColor: "#f9f9f9",
+  },
+  oddRow: {
+    backgroundColor: "#fff",
+  },
+  totalSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 15,
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+    marginTop: 10,
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  totalAmount: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#6B48FF",
+  },
+  closeButton: {
+    backgroundColor: "#6B48FF",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 15,
+  },
+  closeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  InfoContainer: {
+    paddingVertical: 10,
+  },
+  infoText: {
+    color: "red",
+    fontSize: 15,
   },
 });
 

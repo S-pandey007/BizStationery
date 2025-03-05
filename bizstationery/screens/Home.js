@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,35 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import styles from '../style/HomeStyle';
 import { useNavigation } from "@react-navigation/native";
+import {fetchCategories} from '../api/apiService';
+import {useSelector , useDispatch} from 'react-redux'
+
 const HomeScreen = () => {
   const navigation = useNavigation();
+  
   const [searchQuery, setSearchQuery] = useState('');
-  const [cartCount, setCartCount] = useState(3);
+  // const [cartCount, setCartCount] = useState();
+
+    // fetch categories data
+    const dispatch = useDispatch()
+    const {categoryList} = useSelector((state)=> state.categories)
+    const cartItems = useSelector((state)=> state.cart.items);
+    // setCartCount(cartItems.length)
+    const cartCounts = cartItems.length
+    console.log(cartCounts);
+    // setCartCount(cartCounts)
+
+    const CategoryData = categoryList.category
+    useEffect(() => {
+      dispatch(fetchCategories())
+    },[dispatch])
+  
+    useEffect(()=>{
+      console.log('category list:',categoryList.category);
+      // console.log(categoryList.category[0].image_link)
+      // console.log(categoryList.category[0].category)
+    },[categoryList])
+  
 
   const IMAGE_URL =
     'https://th.bing.com/th/id/OIP.iyX8lP4wxAZzW7Fa3JWhawHaGD?w=1000&h=818&rs=1&pid=ImgDetMain';
@@ -59,9 +84,11 @@ const HomeScreen = () => {
 
   // Render functions
   const renderCategoryItem = ({ item }) => (
-    <TouchableOpacity style={styles.categoryItem}>
-      <Image source={{ uri: item.image }} style={styles.categoryImage} />
-      <Text style={styles.categoryName}>{item.name}</Text>
+    <TouchableOpacity
+    onPress={() => navigation.navigate('CategoryDetail', { category: item.category })}
+    style={styles.categoryItem}>
+      <Image source={{ uri: item.image_link }} style={styles.categoryImage} />
+      <Text style={styles.categoryName}>{item.category}</Text>
     </TouchableOpacity>
   );
 
@@ -126,9 +153,9 @@ const HomeScreen = () => {
               </TouchableOpacity>
             </View>
             <FlatList
-              data={item.data}
+              data={CategoryData}
               renderItem={renderCategoryItem}
-              keyExtractor={(item) => item.id}
+              // keyExtractor={(item) => item.id}
               horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.categoryList}
@@ -187,6 +214,10 @@ const HomeScreen = () => {
     console.log('Search button pressed');
   };
 
+
+
+
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -199,11 +230,13 @@ const HomeScreen = () => {
           >
             <Ionicons name="search-outline" size={30} color="#6B48FF" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.cartButton}>
+          <TouchableOpacity
+          onPress={()=>navigation.navigate("Cart")}
+          style={styles.cartButton}>
             <Ionicons name="cart-outline" size={30} color="#6B48FF" />
-            {cartCount > 0 && (
+            {cartCounts > 0 && (
               <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>{cartCount}</Text>
+                <Text style={styles.cartBadgeText}>{cartCounts}</Text>
               </View>
             )}
           </TouchableOpacity>

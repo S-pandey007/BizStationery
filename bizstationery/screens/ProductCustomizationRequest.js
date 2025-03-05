@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,13 +13,31 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
 
 
-const ProductCustomizationRequest = () => {
+const ProductCustomizationRequest = ({route}) => {
+  const id = route.params.id;
+  console.log(id);
   const navigation = useNavigation();
-  const [productName, setProductName] = useState('iQOO Z9 5G SmartPhone'); // Dummy product
   const [customizationDetails, setCustomizationDetails] = useState('');
   const [requestStatus, setRequestStatus] = useState('Pending'); // Initial status
   const [wholesalerMessage, setWholesalerMessage] = useState('Awaiting wholesaler response...'); // Dummy message
 
+
+  const [product ,setProduct] = useState("")
+  
+  useEffect(()=>{
+    const fetchData = async()=>{
+      const response = await fetch(`http://192.168.43.3:5000/api/products/${id}`);
+      const data = await response.json();
+        console.log("data from API", data.product);
+        setProduct(data.product);
+    }
+    fetchData()
+  },[])
+
+  useEffect(()=>{
+    console.log("product :", product);
+    console.log("product name:", product.product_name);
+  },[product])
   // Handle sending customization request
   const handleSendRequest = () => {
     if (customizationDetails.trim()) {
@@ -57,10 +75,12 @@ const ProductCustomizationRequest = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Product Information */}
-        <View style={styles.productSection}>
+        <TouchableOpacity
+        onPress={() => navigation.navigate('ProductDetail', { product: product.id })}
+        style={styles.productSection}>
           <Text style={styles.productTitle}>Selected Product</Text>
-          <Text style={styles.productName}>{productName}</Text>
-        </View>
+          <Text style={styles.productName}>{product.product_name}</Text>
+        </TouchableOpacity>
 
         {/* Customization Request Form */}
         <View style={styles.formSection}>

@@ -16,6 +16,8 @@ import HomeScreen from "./screens/Home";
 import WelcomeScreen from "./screens/Welcome";
 import CategoryScreen from "./screens/Category";
 import ProductCustomizationRequest from "./screens/ProductCustomizationRequest";
+import CategoryDetailSccreen from "./screens/CategoryDetail";
+import ProductDetailScreen from "./screens/ProductDetail";
 
 import MenuScreen from "./screens/Menu"; // Create this file
 import ProfileScreen from "./screens/Profile"; // Create this file
@@ -176,6 +178,18 @@ export default function Navigation() {
           <Stack.Screen
           name="ProductCustomization"
           component={ProductCustomizationRequest}
+          options={{ headerShown: false }}
+          />
+
+          <Stack.Screen
+          name="CategoryDetail"
+          component={CategoryDetailSccreen}
+          options={{ headerShown: false }}
+          />
+
+          <Stack.Screen
+          name="ProductDetail"
+          component={ProductDetailScreen}
           options={{ headerShown: false }}
           />
         </Stack.Navigator>
