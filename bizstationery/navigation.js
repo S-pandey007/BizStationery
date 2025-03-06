@@ -18,6 +18,8 @@ import CategoryScreen from "./screens/Category";
 import ProductCustomizationRequest from "./screens/ProductCustomizationRequest";
 import CategoryDetailSccreen from "./screens/CategoryDetail";
 import ProductDetailScreen from "./screens/ProductDetail";
+import ProceedOrderScreen from './screens/ProceedOrder';
+
 
 import MenuScreen from "./screens/Menu"; // Create this file
 import ProfileScreen from "./screens/Profile"; // Create this file
@@ -190,6 +192,12 @@ export default function Navigation() {
           <Stack.Screen
           name="ProductDetail"
           component={ProductDetailScreen}
+          options={{ headerShown: false }}
+          />
+
+          <Stack.Screen
+          name="ProceedOrder"
+          component={ProceedOrderScreen}
           options={{ headerShown: false }}
           />
         </Stack.Navigator>
