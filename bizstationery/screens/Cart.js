@@ -93,6 +93,7 @@ const calculatePrize = () => {
       FinalPrize,
       name: item.product_name,
       weight: item.weight,
+      hsn_code: item.hsn_code,
     };
   });
 

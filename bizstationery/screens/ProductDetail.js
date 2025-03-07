@@ -103,6 +103,7 @@ const ProductDetail = ({ route }) => {
         stock_quantity:product.stock_quantity,
         weight:product.weight,
         gst_rate: product.gst_rate,
+        hsn_code: product.hsn_code,
       })
     )
 

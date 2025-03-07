@@ -12,7 +12,7 @@ import Icon from "react-native-vector-icons/MaterialIcons"; // For icons
 import styles from "../style/ProceedOrderStyle";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
-
+import generateInvoicePDF from "../utils/generateInvoicePDF";
 
 
 const ProceedOrder = ({ route }) => {
@@ -28,23 +28,23 @@ const navigation = useNavigation();
     const per_item_total_weight = item.weight * item.quantity;
     return per_item_total_weight;
   });
-//   console.log(Total_OrderWeight);
+  console.log(Total_OrderWeight);
 
   const total_weight = Total_OrderWeight.reduce((x, y) => x + y);
-//   console.log(total_weight);
+  console.log(total_weight);
 
   const Transport_expenses_PerKG = 120;
   const total_Transport_expenses_WithoutGST =
     Transport_expenses_PerKG * total_weight;
-//   console.log("Without gst : ", total_Transport_expenses_WithoutGST);
+  console.log("Without gst : ", total_Transport_expenses_WithoutGST);
 
   const Transport_tax_Rate = 5;
   const Transport_tax =
     (Transport_tax_Rate * total_Transport_expenses_WithoutGST) / 100;
-//   console.log("Tax amount on transport : ", Transport_tax);
+  console.log("Tax amount on transport : ", Transport_tax);
   const final_Transport_expenses =
     total_Transport_expenses_WithoutGST + Transport_tax;
-//   console.log("Final Transport expenses : ", final_Transport_expenses);
+  console.log("Final Transport expenses : ", final_Transport_expenses);
 
 
   // product prize calculation
@@ -55,27 +55,39 @@ const navigation = useNavigation();
 })
 const total_Product_Base_Price = total_Product_Base_Price_Array.reduce((x,y)=>x+y)
 
-// console.log("All product Base price :",total_Product_Base_Price)
+console.log("All product Base price :",total_Product_Base_Price)
 
 // calculate total GST on product
 const all_Prodcut_GST_Amount_Array = billingData.map((item)=>{
     return item.GST
 })
 const total_GST_Amount = all_Prodcut_GST_Amount_Array.reduce((x,y)=> x+y)
-// console.log("Total GST Amount :", total_GST_Amount);
+console.log("Total GST Amount :", total_GST_Amount);
 
 const total_Product_Prize_includingGST =
   total_Product_Base_Price + total_GST_Amount;
 
-//   console.log("Total Product Prize including GST : ", total_Product_Prize_includingGST);
+  console.log("Total Product Prize including GST : ", total_Product_Prize_includingGST);
 
 
 // calculate total product prize including transport expenses and GST
 const total_Product_Price_includingGST_and_transport_expenses =
   total_Product_Prize_includingGST + final_Transport_expenses;
-// console.log("Total Product Price including GST and transport expenses : ",
-//   total_Product_Price_includingGST_and_transport_expenses);
+console.log("Total Product Price including GST and transport expenses : ",
+  total_Product_Price_includingGST_and_transport_expenses);
 
+// Prepare all calculations to pass to the PDF generator
+const calculations = {
+  total_weight,
+  total_Transport_expenses_WithoutGST,
+  Transport_tax,
+  final_Transport_expenses,
+  total_Product_Base_Price,
+  total_GST_Amount,
+  total_Product_Prize_includingGST,
+  total_Product_Price_includingGST_and_transport_expenses,
+  Transport_tax_Rate,
+};
 
   // State for modals and address
   const [addressModalVisible, setAddressModalVisible] = useState(false);
@@ -90,6 +102,11 @@ const total_Product_Price_includingGST_and_transport_expenses =
     country:""
   }); // To display saved address
 //   console.log(address);
+
+ // Function to trigger the PDF download
+ const handleDownloadInvoice = () => {
+  generateInvoicePDF(billingData, address, calculations);
+};
   
   return (
     <ScrollView style={styles.container}>
@@ -277,8 +294,8 @@ const total_Product_Price_includingGST_and_transport_expenses =
                   GST Rate
                 </Text>
               </View>
-              {billingData.map((item) => (
-                <ScrollView style={styles.invoiceSection} showsVerticalScrollIndicator={false}>
+              {billingData.map((item,index) => (
+                <ScrollView key={index} style={styles.invoiceSection} showsVerticalScrollIndicator={false}>
                   <View style={styles.productItem}>
                     <Text style={{ flex: 2, textAlign: "center" }}>
                       {item.name}
@@ -382,7 +399,7 @@ const total_Product_Price_includingGST_and_transport_expenses =
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.downloadButton]}
-                  onPress={() => alert("Download Invoice PDF Clicked")}
+                  onPress={handleDownloadInvoice}
                 >
                   <Text style={styles.modalButtonText}>Download Invoice</Text>
                 </TouchableOpacity>
