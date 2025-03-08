@@ -18,6 +18,7 @@ const cartSlice = createSlice({
             }else{
                 state.items.push({id,quantity, ...product})
             }
+            console.log('Cart state after addToCart:', state.items);
         },
 
         // update item quantity

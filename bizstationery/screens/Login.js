@@ -24,16 +24,6 @@ const LoginScreen = ({ navigation }) => {
       const savedUserData = await AsyncStorage.getItem("userData");
       const userData = savedUserData ? JSON.parse(savedUserData) : null;
 
-      if (
-        userData &&
-        (inputValue === userData.email || inputValue === userData.phone)
-      ) {
-        login(userData); // Update global auth state
-        ToastAndroid.show("Logged In!", ToastAndroid.LONG);
-        navigation.navigate("Home");
-      } else {
-        ToastAndroid.show("Invalid credentials!", ToastAndroid.LONG);
-      }
       if (!savedUserData) {
         ToastAndroid.showWithGravity(
           "No user data found! Please register first.",
@@ -48,8 +38,8 @@ const LoginScreen = ({ navigation }) => {
 
       // Ensure trimmed input for accurate matching
       const trimmedInput = inputValue.trim();
-      const storedEmail = parsedData.email.trim();
-      const storedPhone = parsedData.phone.trim();
+      const storedEmail = parsedData?.email?.trim();
+      const storedPhone = parsedData?.phone?.trim();
 
       // console.log(`(DEBUG) Mobile input: "${trimmedInput}"`);
       // console.log(`(DEBUG) Mobile stored: "${storedPhone}"`);
@@ -57,6 +47,17 @@ const LoginScreen = ({ navigation }) => {
 
       // console.log(`(DEBUG) Input split:`, trimmedInput.split(''));
       // console.log(`(DEBUG) Stored split:`, storedPhone.split(''));
+
+      if (
+        userData &&
+        (inputValue === storedEmail || inputValue === storedPhone)
+      ) {
+        login(userData); // Update global auth state
+        ToastAndroid.show("Logged In!", ToastAndroid.LONG);
+        navigation.navigate("Home");
+      } else {
+        ToastAndroid.show("Invalid credentials!", ToastAndroid.LONG);
+      }
 
       if (inputType === "email") {
         if (trimmedInput === storedEmail) {

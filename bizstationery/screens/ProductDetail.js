@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons"; // For icons
 import styles from "../style/ProductDetailStyle"; // Import styles from the separate file
 import { useNavigation } from '@react-navigation/native';
 import {useDispatch,useSelector} from 'react-redux'
-import { addToCart } from "../redux/slice/cartSlice";
+import { addToCart,updateQuantity } from "../redux/slice/cartSlice";
 
 
 const ProductDetail = ({ route }) => {
@@ -217,12 +217,12 @@ const ProductDetail = ({ route }) => {
             </Pressable>
           </View>
           <TouchableOpacity
-            style={[styles.addToCartButton, inCart && styles.inCartButton]}
+            style={[styles.addToCartButton, isInCart && styles.inCartButton]}
             onPress={handleAddToCart}
             disabled={inCart || stockStatus.text === "Out of Stock"}
           >
             <Text style={styles.addToCartText}>
-              {inCart ? "Added to Cart" : "Add to Cart"}
+              {isInCart ? "Added to Cart" : "Add to Cart"}
             </Text>
           </TouchableOpacity>
 

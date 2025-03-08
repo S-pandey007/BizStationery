@@ -27,7 +27,7 @@ const HomeScreen = () => {
     const cartItems = useSelector((state)=> state.cart.items);
     // setCartCount(cartItems.length)
     const cartCounts = cartItems.length
-    console.log(cartCounts);
+    // console.log(cartCounts);
     // setCartCount(cartCounts)
 
     const CategoryData = categoryList.category
@@ -36,7 +36,7 @@ const HomeScreen = () => {
     },[dispatch])
   
     useEffect(()=>{
-      console.log('category list:',categoryList.category);
+      // console.log('category list:',categoryList.category);
       // console.log(categoryList.category[0].image_link)
       // console.log(categoryList.category[0].category)
     },[categoryList])

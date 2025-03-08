@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useContext } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // For back arrow
 import styles from '../style/MenuStyle'; // Import styles from the separate file
+import { AuthContext } from "../AuthProvider";
 
 const MenuScreen = ({ navigation }) => {
+  const { user, logout, loading } = useContext(AuthContext);
   // Menu items data
   const menuItems = [
     { title: 'Home', icon: 'home-outline' },
@@ -53,13 +56,9 @@ const MenuScreen = ({ navigation }) => {
     }
   };
 
-  const handleLogout = () => {
-    setLoading(true); // Show loading state
-    // Clear user data from AuthContext
-    setUser(null);
-    // Navigate to Welcome or Login screen
-    navigation.replace('Welcome'); // Assuming 'Welcome' is the initial screen
-    setLoading(false); // Hide loading state
+  const handleLogout = async () => {
+    await logout(); // Call the logout function from AuthContext
+    navigation.replace("Welcome"); // Navigate to WelcomeScreen after logout
   };
 
   return (

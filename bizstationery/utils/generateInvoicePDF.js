@@ -157,7 +157,7 @@ const generateInvoicePDF = async (billingData, address, calculations) => {
                     )}</td>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #000; padding: 5px;" colspan="4"><strong>Total</strong></td>
+                    <td style="border: 1px solid #000; padding: 5px;" colspan="3"><strong>Total</strong></td>
                     <td style="border: 1px solid #000; padding: 5px;"><strong>${total_Product_Price_includingGST_and_transport_expenses.toFixed(
                       2
                     )}</strong></td>

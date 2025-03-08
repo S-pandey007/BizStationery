@@ -28,27 +28,8 @@ import CartScreen from "./screens/Cart";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 // ✅ Protected Route Component
-const ProtectedRoute = ({ navigation, children }) => {
-  const { user, loading } = useContext(AuthContext);
 
-  // Show a loader while checking authentication
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
 
-  // If user is not logged in, redirect to Welcome page
-  useEffect(() => {
-    if (!user) {
-      navigation.replace("Welcome");
-    }
-  }, [user, navigation]);
-
-  return user ? children : null;
-};
 
 // bottom tab navigator
 
@@ -141,11 +122,47 @@ const TabNavigator = () => {
   );
 };
 
+const ProtectedRoute = ({ navigation, children }) => {
+  const { user, loading } = useContext(AuthContext)||{};
+
+  // Show a loader while checking authentication
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  // If user is not logged in, redirect to Welcome page
+  // useEffect(() => {
+  //   if (!user) {
+  //     console.log("No user, redirecting to Welcome");
+  //     navigation.replace("Welcome");
+  //   }else {
+  //     console.log("User found, staying on Home");
+  //   }
+  // }, [user, navigation]);
+
+  return user ? children : null;
+};
+
 export default function Navigation() {
+  const context = useContext(AuthContext);
+  const { user, loading : authLoading } = context || {};
+  console.log("App authLoading state:", authLoading, "user:", user);
+  
+  if (authLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
   return (
     <AuthProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Home">
+      <Stack.Navigator initialRouteName={user ? "Home" : "Welcome"}>
           {/* Public Routes */}
           <Stack.Screen
             name="Welcome"
@@ -206,4 +223,3 @@ export default function Navigation() {
   );
 }
 
-const Drawer = createDrawerNavigator();
