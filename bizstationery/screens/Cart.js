@@ -280,24 +280,7 @@ const CartScreen = () => {
           </View>
         </View>
 
-        {/* Saved for Later Section (Placeholder) */}
-        <View style={styles.savedSection}>
-          <Text style={styles.savedTitle}>Saved for Later (4 items)</Text>
-          <View style={styles.savedCategory}>
-            <Text style={styles.savedCategoryText}>Smartphones & basic...</Text>
-          </View>
-          <View style={styles.savedCategory}>
-            <Text style={styles.savedCategoryText}>Mouse pads (1)</Text>
-          </View>
-          <View style={styles.savedCategory}>
-            <Text style={styles.savedCategoryText}>
-              Notebook computer stan...
-            </Text>
-          </View>
-          <View style={styles.savedCategory}>
-            <Text style={styles.savedCategoryText}>Laptops (1)</Text>
-          </View>
-        </View>
+        
       </ScrollView>
 
       {/* Order Details Modal */}

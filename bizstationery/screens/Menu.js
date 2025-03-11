@@ -67,6 +67,14 @@ const MenuScreen = () => {
     if(item.title ==='Saved Products'){
       navigation.navigate("Saved")
     } 
+    
+    if(item.title ==='Messages'){
+      navigation.navigate("MessageScreen")
+    } 
+    
+    if(item.title ==='My Orders'){
+      navigation.navigate("MyOrders")
+    } 
 
     
   };
