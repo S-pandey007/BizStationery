@@ -6,66 +6,116 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Image,
+  FlatList,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // For icons
-import styles from '../style/ProductCustomizationStyle';
+import { Ionicons } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import styles from '../style/ProductCustomizationStyle';
 
-
-const ProductCustomizationRequest = ({route}) => {
+const ProductCustomizationRequest = ({ route }) => {
   const id = route.params.id;
-  console.log(id);
   const navigation = useNavigation();
   const [customizationDetails, setCustomizationDetails] = useState('');
-  const [requestStatus, setRequestStatus] = useState('Pending'); // Initial status
-  const [wholesalerMessage, setWholesalerMessage] = useState('Awaiting wholesaler response...'); // Dummy message
+  const [requestStatus, setRequestStatus] = useState('Pending');
+  const [wholesalerMessage, setWholesalerMessage] = useState('Awaiting wholesaler response...');
+  const [product, setProduct] = useState("");
+  const [selectedImages, setSelectedImages] = useState([]); // State for selected images
 
-
-  const [product ,setProduct] = useState("")
-  
-  useEffect(()=>{
-    const fetchData = async()=>{
+  useEffect(() => {
+    const fetchData = async () => {
       const response = await fetch(`http://192.168.43.3:5000/api/products/${id}`);
       const data = await response.json();
-        console.log("data from API", data.product);
-        setProduct(data.product);
-    }
-    fetchData()
-  },[])
+      console.log("data from API", data.product);
+      setProduct(data.product);
+    };
+    fetchData();
+  }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     console.log("product :", product);
     console.log("product name:", product.product_name);
-  },[product])
-  // Handle sending customization request
-  const handleSendRequest = () => {
-    if (customizationDetails.trim()) {
-      setRequestStatus('Pending');
-      setWholesalerMessage('Your request has been sent to the wholesaler. Waiting for response...');
-      // Here, you would typically send this data to a backend or context
-      console.log('Customization request sent:', {
-        product: productName,
-        details: customizationDetails,
-      });
-      setCustomizationDetails(''); // Clear input after sending
-    } else {
-      alert('Please provide customization details before sending the request.');
+  }, [product]);
+
+  // Function to pick multiple images
+  const pickImages = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      alert('Permission to access gallery is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true, // Enable multiple selection
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const newImages = result.assets.map(asset => ({
+        uri: asset.uri,
+        fileName: asset.fileName || `image-${Date.now()}.jpg`,
+      }));
+      setSelectedImages(prevImages => [...prevImages, ...newImages]);
     }
   };
 
+  // Function to remove an image
+  const removeImage = (uri) => {
+    setSelectedImages(prevImages => prevImages.filter(image => image.uri !== uri));
+  };
+
+  // Handle sending customization request with images
+  const handleSendRequest = async () => {
+    if (!customizationDetails.trim() && selectedImages.length === 0) {
+      alert('Please provide customization details or select at least one image.');
+      return;
+    }
+
+    setRequestStatus('Pending');
+    setWholesalerMessage('Your request has been sent to the wholesaler. Waiting for response...');
+
+    // Prepare data to send (e.g., to a backend)
+    const requestData = {
+      product: product.product_name,
+      details: customizationDetails,
+      images: selectedImages.map(image => ({
+        uri: image.uri,
+        name: image.fileName,
+      })),
+    };
+    console.log('Customization request sent:', requestData);
+
+    // Simulate sending to backend (replace with actual API call)
+    // e.g., await fetch('your-api-endpoint', { method: 'POST', body: JSON.stringify(requestData) });
+
+    setCustomizationDetails('');
+    setSelectedImages([]); // Clear images after sending
+  };
+
+  // Render image previews
+  const renderImageItem = ({ item }) => (
+    <View style={styles.imageContainer}>
+      <Image source={{ uri: item.uri }} style={styles.imagePreview} />
+      <TouchableOpacity
+        style={styles.removeButton}
+        onPress={() => removeImage(item.uri)}
+      >
+        <Ionicons name="close-circle" size={20} color="#FF4D4D" />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      {/* Fixed Header */}
+      {/* Header */}
       <View style={styles.header}>
-        <AntDesign
-          onPress={() => navigation.goBack()}
-          name="arrowleft"
-          size={24}
-          color="black"
-          style={styles.headerIcon}
-        />
-        <Text style={styles.headerText}>Product Customization</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <AntDesign name="arrowleft" size={26} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerText}>Customize Product</Text>
       </View>
 
       {/* Scrollable Content */}
@@ -76,10 +126,11 @@ const ProductCustomizationRequest = ({route}) => {
       >
         {/* Product Information */}
         <TouchableOpacity
-        onPress={() => navigation.navigate('ProductDetail', { product: product.id })}
-        style={styles.productSection}>
-          <Text style={styles.productTitle}>Selected Product</Text>
-          <Text style={styles.productName}>{product.product_name}</Text>
+          onPress={() => navigation.navigate('ProductDetail', { product: product.id })}
+          style={styles.productSection}
+        >
+          <Text style={styles.sectionTitle}>Selected Product</Text>
+          <Text style={styles.productName}>{product.product_name || "Loading..."}</Text>
         </TouchableOpacity>
 
         {/* Customization Request Form */}
@@ -87,16 +138,32 @@ const ProductCustomizationRequest = ({route}) => {
           <Text style={styles.sectionTitle}>Customization Details</Text>
           <TextInput
             style={styles.input}
-            placeholder="Describe your customization needs (e.g., color, size, features)..."
+            placeholder="e.g., color, size, features"
             placeholderTextColor="#888"
             multiline
             value={customizationDetails}
             onChangeText={setCustomizationDetails}
           />
-          <TouchableOpacity
-            style={styles.sendButton}
-            onPress={handleSendRequest}
-          >
+
+          {/* Image Selection */}
+          <TouchableOpacity style={styles.imagePickerButton} onPress={pickImages}>
+            <Ionicons name="image-outline" size={20} color="#007AFF" />
+            <Text style={styles.imagePickerText}>Add Images</Text>
+          </TouchableOpacity>
+
+          {/* Image Previews */}
+          {selectedImages.length > 0 && (
+            <FlatList
+              data={selectedImages}
+              renderItem={renderImageItem}
+              keyExtractor={item => item.uri}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.imageList}
+            />
+          )}
+
+          <TouchableOpacity style={styles.sendButton} onPress={handleSendRequest}>
             <Text style={styles.sendButtonText}>Send Request</Text>
           </TouchableOpacity>
         </View>
@@ -108,7 +175,7 @@ const ProductCustomizationRequest = ({route}) => {
             <Ionicons
               name={
                 requestStatus === "Pending"
-                  ? "clock-outline"
+                  ? "time-outline"
                   : requestStatus === "Accepted"
                   ? "checkmark-circle-outline"
                   : "close-circle-outline"
@@ -116,29 +183,19 @@ const ProductCustomizationRequest = ({route}) => {
               size={24}
               color={
                 requestStatus === "Pending"
-                  ? "#FFA500"
+                  ? "#FFA726"
                   : requestStatus === "Accepted"
                   ? "#4CAF50"
-                  : "#FF4D4D"
+                  : "#EF5350"
               }
             />
             <Text style={styles.statusText}>{requestStatus}</Text>
           </View>
         </View>
-
-        {/* Wholesaler Message */}
-        <View style={styles.messageSection}>
-          <Text style={styles.sectionTitle}>Wholesaler Response</Text>
-          <Text style={styles.messageText}>{wholesalerMessage}</Text>
-          {requestStatus !== "Pending" && (
-            <TouchableOpacity style={styles.viewDetailsButton}>
-              <Text style={styles.viewDetailsText}>View Details</Text>
-            </TouchableOpacity>
-          )}
-        </View>
       </ScrollView>
     </View>
   );
 };
+
 
 export default ProductCustomizationRequest;

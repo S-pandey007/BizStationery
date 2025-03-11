@@ -224,12 +224,12 @@ const HomeScreen = () => {
       <View style={styles.header}>
         <Text style={styles.headerText}>Hi Shubham</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.searchButton}
             onPress={handleSearchPress}
           >
             <Ionicons name="search-outline" size={30} color="#6B48FF" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity
           onPress={()=>navigation.navigate("Cart")}
           style={styles.cartButton}>

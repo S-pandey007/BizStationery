@@ -19,7 +19,7 @@ import ProductCustomizationRequest from "./screens/ProductCustomizationRequest";
 import CategoryDetailSccreen from "./screens/CategoryDetail";
 import ProductDetailScreen from "./screens/ProductDetail";
 import ProceedOrderScreen from './screens/ProceedOrder';
-
+import SavedScreen from './screens/SavedScreen'
 
 import MenuScreen from "./screens/Menu"; // Create this file
 import ProfileScreen from "./screens/Profile"; // Create this file
@@ -217,6 +217,14 @@ export default function Navigation() {
           component={ProceedOrderScreen}
           options={{ headerShown: false }}
           />
+
+          <Stack.Screen
+          name="Saved"
+          component={SavedScreen}
+          options={{ headerShown: false }}
+          />
+
+
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>

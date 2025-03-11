@@ -4,19 +4,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import categoryReducer from './redux/slice/categorySlice'
 import cartReducer from './redux/slice/cartSlice'
-
+import savedItemReducer from './redux/slice/savedItemsSlice'
 
 // Combine all reducers into a root reducer
 const rootReducer = combineReducers({
   categories: categoryReducer,
   cart: cartReducer,
+  savedItems: savedItemReducer,
 });
 
 // configuration for redux-persist
 const persistConfig = {
   key:'root',  // key to store data in AsyncStorage
   storage: AsyncStorage, 
-  whitelist: ['cart'],// only persist the 'cart' slice
+  whitelist: ['cart','savedItems'],// only persist the 'cart' slice
 }
 
 

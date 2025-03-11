@@ -10,6 +10,8 @@ import {
   Modal,
   TextInput,
   Alert,
+  Linking,
+  Pressable
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // For icons
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // For bank-outline
@@ -27,7 +29,7 @@ const ProfileScreen = () => {
     address: 'Address, Pune, Maharashtra, India, 411041',
     profileImage: 'https://via.placeholder.com/80', // Default profile image
     companyName: 'My E-Commerce Co.',
-    companyWebsite: 'www.mycompany.com',
+    companyWebsite: 'https://www.msn.com/en-in/money/topstories/chhaava-actress-rashmika-mandanna-makes-history-with-three-consecutive-rs-500-crore-blockbusters/ar-AA1Ay7cG',
     gstin: '29ABCDE1234F5Z6',
     pan: 'ABCDE1234F',
     ifsc: 'SBIN0001234',
@@ -154,6 +156,19 @@ const ProfileScreen = () => {
     });
     setIsBankModalVisible(false);
     console.log('Bank updated successfully:', bankForm);
+  };
+
+
+  //open social media
+  const openUrl = (url) => {
+    if (url && url.trim() !== '') {
+      Linking.openURL(url).catch((err) => {
+        console.log('Error opening URL:', err);
+        alert('Could not open the link. Please check the URL.');
+      });
+    } else {
+      alert('No link provided for this social media.');
+    }
   };
 
   
@@ -291,10 +306,14 @@ const ProfileScreen = () => {
             <Text style={styles.infoText}>Company Name: {userData.companyName}</Text>
           </View>
           <View style={styles.infoItem}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="globe-outline" size={20} color="#666" />
+            <View style={[styles.iconContainer,{fontWeight:600,color:'blue'}]}>
+              <Ionicons name="globe-outline" size={20} color="blue" />
             </View>
-            <Text style={styles.infoText}>Company Website: {userData.companyWebsite}</Text>
+            <Pressable
+            onPress={() => openUrl(userData.companyWebsite)}
+            >
+                <Text style={[styles.infoText,{fontWeight:600,color:'blue'}]}>Company Website</Text>
+            </Pressable>
           </View>
           <View style={styles.infoItem}>
             <View style={styles.iconContainer}>
@@ -309,67 +328,32 @@ const ProfileScreen = () => {
             <Text style={styles.infoText}>PAN: {userData.pan}</Text>
           </View>
           <View style={styles.socialIcons}>
-            <TouchableOpacity style={styles.socialIcon}>
+            <TouchableOpacity 
+             onPress={() => openUrl(userData.socialLinks.facebook)}
+             style={styles.socialIcon}>
               <Ionicons name="logo-facebook" size={24} color="#4267B2" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialIcon}>
+
+            <TouchableOpacity
+             onPress={() => openUrl(userData.socialLinks.instagram)}
+             style={styles.socialIcon}>
               <Ionicons name="logo-instagram" size={24} color="#E4405F" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialIcon}>
+            
+            <TouchableOpacity 
+             onPress={() => openUrl(userData.socialLinks.googleBusiness)}
+             style={styles.socialIcon}>
               <Ionicons name="logo-google" size={24} color="#DB4437" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialIcon}>
+            
+            <TouchableOpacity 
+            onPress={() => openUrl(userData.socialLinks.youtube)}
+            style={styles.socialIcon}>
               <Ionicons name="logo-youtube" size={24} color="#FF0000" />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Stats Sections (Messages, Products of Interest, Sales) */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Activity Stats</Text>
-          
-          {/* Messages Section */}
-          <Text style={styles.subSectionTitle}>Messages</Text>
-          <View style={styles.statsContainer}>
-            {[
-              { label: 'Total Messages', value: userData.stats.messages.total },
-              { label: 'Unread Messages', value: userData.stats.messages.unread },
-            ].map((stat, index) => (
-              <View key={index} style={styles.statItem}>
-                <Text style={styles.statNumber}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Products of Interest Section */}
-          <Text style={styles.subSectionTitle}>Products of Interest</Text>
-          <View style={styles.statsContainer}>
-            {[
-              { label: 'Viewed Products', value: userData.stats.productsOfInterest.viewed },
-              { label: 'Favorited Products', value: userData.stats.productsOfInterest.favorited },
-            ].map((stat, index) => (
-              <View key={index} style={styles.statItem}>
-                <Text style={styles.statNumber}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Sales Section */}
-          <Text style={styles.subSectionTitle}>Sales</Text>
-          <View style={styles.statsContainer}>
-            {[
-              { label: 'Total Sales', value: userData.stats.sales.total },
-              { label: 'Completed Sales', value: userData.stats.sales.completed },
-            ].map((stat, index) => (
-              <View key={index} style={styles.statItem}>
-                <Text style={styles.statNumber}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
 
         {/* Bank Account Details Section */}
         <View style={styles.section}>

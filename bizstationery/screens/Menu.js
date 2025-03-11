@@ -10,8 +10,10 @@ import {
 import { Ionicons } from '@expo/vector-icons'; // For back arrow
 import styles from '../style/MenuStyle'; // Import styles from the separate file
 import { AuthContext } from "../AuthProvider";
+import { useNavigation } from "@react-navigation/native";
 
-const MenuScreen = ({ navigation }) => {
+const MenuScreen = () => {
+  const navigation = useNavigation()
   const { user, logout, loading } = useContext(AuthContext);
   // Menu items data
   const menuItems = [
@@ -51,9 +53,22 @@ const MenuScreen = ({ navigation }) => {
         ],
         { cancelable: true }
       );
-    } else {
-      console.log(`${item.title} pressed`);
     }
+    if(item.title ==='Home'){
+      navigation.navigate('Home')
+    }
+    if(item.title ==='Profile'){
+      navigation.navigate('Profile')
+    }
+    if(item.title ==='All Categories'){
+      navigation.navigate("Category")
+    } 
+    
+    if(item.title ==='Saved Products'){
+      navigation.navigate("Saved")
+    } 
+
+    
   };
 
   const handleLogout = async () => {
