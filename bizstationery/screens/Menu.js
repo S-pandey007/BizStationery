@@ -25,7 +25,7 @@ const MenuScreen = () => {
     { title: 'Saved Products', icon: 'bookmark-outline' },
     { title: 'Refund', icon: 'return-down-back-outline' },
     { title: 'Complaints', icon: 'warning-outline' },
-    { title: 'Product Request & Customization', icon: 'create-outline' },
+    { title: 'Product Customization Request', icon: 'create-outline' },
     { title: 'Product List & Status', icon: 'list-outline' },
     { title: 'Help & Support', icon: 'help-circle-outline' },
     { title: 'About BizStationery', icon: 'information-circle-outline' },
@@ -74,6 +74,14 @@ const MenuScreen = () => {
     
     if(item.title ==='My Orders'){
       navigation.navigate("MyOrders")
+    } 
+    
+    if(item.title ==='Product Customization Request'){
+      navigation.navigate("CustomizationRequests")
+    } 
+    
+    if(item.title ==='Complaints'){
+      navigation.navigate("ComplaintsSubmission")
     } 
 
     

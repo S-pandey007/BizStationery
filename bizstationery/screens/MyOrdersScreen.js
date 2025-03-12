@@ -155,22 +155,6 @@ const MyOrdersScreen = () => {
     </TouchableOpacity>
   );
 
-//   if (orders.length === 0) {
-//     return (
-//       <SafeAreaView style={styles.container}>
-//         <View style={styles.header}>
-//           <Text style={styles.headerTitle}>My Orders</Text>
-//           <TouchableOpacity onPress={() => setFilterModalVisible(true)}>
-//             <Ionicons name="filter" size={24} color="#6B48FF" />
-//           </TouchableOpacity>
-//         </View>
-//         <View style={styles.emptyContainer}>
-//           <Ionicons name="cart-outline" size={80} color="#A0A0A0" />
-//           <Text style={styles.emptyText}>No orders available.</Text>
-//         </View>
-//       </SafeAreaView>
-//     );
-//   }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -380,6 +364,7 @@ const MyOrdersScreen = () => {
           </View>
         </View>
       </Modal>
+      
     </SafeAreaView>
   );
 };

@@ -22,6 +22,8 @@ import ProceedOrderScreen from './screens/ProceedOrder';
 import SavedScreen from './screens/SavedScreen'
 import MessageScreen from "./screens/MessageScreen";
 import MyOrdersScreen from "./screens/MyOrdersScreen";
+import CustomizationRequestsScreen from "./screens/CustomizationRequestsScreen";
+import ComplaintsSubmissionScreen from "./screens/ComplaintsSubmissionScreen";
 
 import MenuScreen from "./screens/Menu"; // Create this file
 import ProfileScreen from "./screens/Profile"; // Create this file
@@ -235,6 +237,18 @@ export default function Navigation() {
           <Stack.Screen
           name="MyOrders"
           component={MyOrdersScreen}
+          options={{ headerShown: false }}
+          />
+          
+          <Stack.Screen
+          name="CustomizationRequests"
+          component={CustomizationRequestsScreen}
+          options={{ headerShown: false }}
+          />
+          
+          <Stack.Screen
+          name="ComplaintsSubmission"
+          component={ComplaintsSubmissionScreen}
           options={{ headerShown: false }}
           />
 
