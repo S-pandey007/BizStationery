@@ -26,14 +26,14 @@ const ProductDetail = ({ route }) => {
   const dispatch = useDispatch();
   const cartItems= useSelector((state)=> state.cart.items)
 
-  const [product, setProduct] = useState(); // Initialize as null to handle undefined
+  const [product, setProduct] = useState({}); // Initialize as null to handle undefined
   const [loading, setLoading] = useState(true); // Add loading state
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true); // Start loading
-        const response = await fetch(`http://192.168.43.3:5000/api/products/${id}`);
+        const response = await fetch(`http://192.168.245.3:5000/api/products/${id}`);
         const data = await response.json();
         console.log("data from API", data.product);
         setProduct(data.product);

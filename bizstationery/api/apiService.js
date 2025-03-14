@@ -1,6 +1,6 @@
 import { setCategories, setLoading as setCategoryLoading, setError as setCategoryError } from '../redux/slice/categorySlice';
 
-const BASE_URL = 'http://192.168.43.3:5000/api/';
+const BASE_URL = 'http://192.168.245.3:5000/api/';
 
 export const fetchCategories = () => async (dispatch) => {
   try {

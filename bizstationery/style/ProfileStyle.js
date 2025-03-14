@@ -3,9 +3,34 @@ import { StyleSheet, Dimensions } from 'react-native';
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
+
+  alertBox: {
+    position: 'absolute',
+    top: 40,
+    left:40,
+    width: '80%',
+    backgroundColor: '#fff', // Bright yellow for attention
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    zIndex: 1000, // Ensure it’s above other content
+  },
+  alertText: {
+    color: '#6B48FF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5', // Light gray background for the container
+    backgroundColor: '#fff', // Light gray background for the container
   },
   header: {
     flexDirection: 'row',

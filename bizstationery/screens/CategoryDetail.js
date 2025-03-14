@@ -16,7 +16,7 @@ const CategoryDetail = ({route}) => {
     const fetchData = async () => {
       try {
         setLoading(true); // Start loading
-        const response = await fetch(`http://192.168.43.3:5000/api/category/${category}`);
+        const response = await fetch(`http://192.168.245.3:5000/api/category/${category}`);
         const data = await response.json();
         // console.log('Data from API:', data);
         setProducts(data.product); // Store products directly

@@ -236,7 +236,7 @@ const RegistrationScreen = () => {
     const email = formData.email;
     console.log(email);
     try {
-      const response = await fetch("http://192.168.43.3:8001/user/sendotp", {
+      const response = await fetch("http://192.168.245.3:8001/user/sendotp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -270,7 +270,7 @@ const RegistrationScreen = () => {
     console.log(email);
     try {
       // const response = await axios.post('http://192.168.43.3:8001/user/verifyotp', { email, otp });
-      const response = await fetch("http://192.168.43.3:8001/user/verifyotp", {
+      const response = await fetch("http://192.168.245.3:8001/user/verifyotp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -314,7 +314,7 @@ const RegistrationScreen = () => {
     }
 
     try {
-      const response = await fetch("http://192.168.43.3:8001/user/gstin", {
+      const response = await fetch("http://192.168.245.3:8001/user/gstin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -360,8 +360,12 @@ const RegistrationScreen = () => {
     // Trim and ensure data is in correct format before saving
     const email = formData.email.trim();
     const phone = formData.phoneNumber.trim();
+    const gstin = formData.gstin.trim();
+    const name = formData.name.trim();
+    const businessName = formData.businessName.trim();
+    const pinCode = formData.pinCode.trim()
 
-    const userData = { email, phone };
+    const userData = { email, phone , name,gstin,businessName,pinCode };
     await AsyncStorage.setItem("userData", JSON.stringify(userData));
 
     // Verify saved data

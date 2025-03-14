@@ -83,6 +83,14 @@ const MenuScreen = () => {
     if(item.title ==='Complaints'){
       navigation.navigate("ComplaintsSubmission")
     } 
+    
+    if(item.title ==='Product List & Status'){
+      navigation.navigate("ProductListAndStatus")
+    } 
+   
+    if(item.title ==='Settings'){
+      navigation.navigate("Settings")
+    } 
 
     
   };

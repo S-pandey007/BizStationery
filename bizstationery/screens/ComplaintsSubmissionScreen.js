@@ -16,143 +16,230 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
 import styles from "../style/ComplaintsSubmissionStyle";
-
 const ComplaintsSubmissionScreen = () => {
-    const navigation = useNavigation();
+  const navigation = useNavigation();
 
-  // State for modal visibility, complaint details, and images
-  const [modalVisible, setModalVisible] = useState(false);
-  const [complaintDetails, setComplaintDetails] = useState("");
+  // State for complaints, submission modal, complaint details, and selected complaint
+  const [complaints, setComplaints] = useState([]);
+  const [submitModalVisible, setSubmitModalVisible] = useState(false);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
   const [selectedImages, setSelectedImages] = useState([]);
 
-  // Function to pick multiple images
+  // Simulated initial complaints (replace with API call if needed)
+  const initialComplaints = [
+    {
+      id: "1",
+      title: "Damaged Product",
+      message: "The product arrived broken.",
+      images: [{ uri: "https://via.placeholder.com/100", fileName: "image1.jpg" }],
+      status: "Pending",
+      date: "2025-03-10",
+      wholesalerResponse: "",
+    },
+    {
+      id: "2",
+      title: "Wrong Item",
+      message: "Received the wrong item.",
+      images: [],
+      status: "Responded",
+      date: "2025-03-05",
+      wholesalerResponse: "Apologies, replacement shipped.",
+    },
+  ];
+
+  // Pick images using Expo Image Picker
   const pickImages = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert("Permission Denied", "Permission to access gallery is required!");
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permission Denied", "Need gallery access!");
       return;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
       quality: 1,
     });
-
     if (!result.canceled) {
       const newImages = result.assets.map((asset) => ({
         uri: asset.uri,
         fileName: asset.fileName || `image-${Date.now()}.jpg`,
       }));
-      setSelectedImages((prevImages) => [...prevImages, ...newImages]);
+      setSelectedImages([...selectedImages, ...newImages]);
     }
   };
 
-  // Function to remove an image
+  // Remove an image
   const removeImage = (uri) => {
-    setSelectedImages((prevImages) => prevImages.filter((image) => image.uri !== uri));
+    setSelectedImages(selectedImages.filter((img) => img.uri !== uri));
   };
 
-  // Handle submitting the complaint
-  const handleSubmitComplaint = async () => {
-    if (!complaintDetails.trim() && selectedImages.length === 0) {
-      Alert.alert("Error", "Please provide complaint details or upload at least one image.");
+  // Submit complaint
+  const handleSubmitComplaint = () => {
+    if (!title.trim() && !message.trim() && selectedImages.length === 0) {
+      Alert.alert("Error", "Please fill at least one field (Title, Message, or Image).");
       return;
     }
-
-    const complaintData = {
-      details: complaintDetails,
+    const newComplaint = {
+      id: (complaints.length + 1).toString(),
+      title: title || "No Title",
+      message: message || "No Message",
       images: selectedImages,
       status: "Pending",
-      date: new Date().toISOString().split("T")[0], // Current date in YYYY-MM-DD format
+      date: new Date().toISOString().split("T")[0],
+      wholesalerResponse: "",
     };
-
-    // Simulate API call to submit complaint
-    console.log("Submitting complaint:", complaintData);
-    // Replace with actual API call
-    // await fetch('http://192.168.43.3:5000/api/complaints', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(complaintData),
-    // });
-
-    Alert.alert("Success", "Your complaint has been submitted!");
-    setComplaintDetails("");
+    setComplaints([...complaints, newComplaint]);
+    Alert.alert("Success", "Complaint submitted!");
+    setTitle("");
+    setMessage("");
     setSelectedImages([]);
-    setModalVisible(false);
-
+    setSubmitModalVisible(false);
   };
 
   // Render image previews
   const renderImageItem = ({ item }) => (
     <View style={styles.imageContainer}>
       <Image source={{ uri: item.uri }} style={styles.imagePreview} />
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => removeImage(item.uri)}
-      >
+      <TouchableOpacity onPress={() => removeImage(item.uri)} style={styles.removeButton}>
         <Ionicons name="close-circle" size={20} color="#FF4D4D" />
       </TouchableOpacity>
     </View>
+  );
+
+  // Render complaint list item
+  const renderComplaint = ({ item }) => (
+    <TouchableOpacity
+      style={styles.complaintCard}
+      onPress={() => {
+        setSelectedComplaint(item);
+        setDetailModalVisible(true);
+      }}
+    >
+      <Text style={styles.complaintTitle}>{item.title}</Text>
+      <Text style={styles.complaintDate}>{item.date}</Text>
+      <Text style={styles.complaintStatus}>{item.status}</Text>
+    </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color="black" />
-                </TouchableOpacity>
-        <Text style={styles.headerTitle}>Submit a Complaint</Text>
-        <TouchableOpacity onPress={() => setModalVisible(true)}>
+      <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Complaints</Text>
+        <TouchableOpacity onPress={() => setSubmitModalVisible(true)}>
           <Ionicons name="alert-circle-outline" size={24} color="#6B48FF" />
         </TouchableOpacity>
       </View>
 
-      
+      {/* Complaint List or Empty Message */}
+      {complaints.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="alert-circle-outline" size={80} color="#A0A0A0" />
+          <Text style={styles.emptyText}>No complaints available.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={complaints}
+          renderItem={renderComplaint}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.complaintList}
+        />
+      )}
 
-      {/* Complaint Submission Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
+      {/* Submission Modal */}
+      <Modal visible={submitModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Submit Complaint</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <TouchableOpacity onPress={() => setSubmitModalVisible(false)}>
                 <Ionicons name="close" size={24} color="#6B48FF" />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody}>
-              <Text style={styles.modalLabel}>Complaint Details</Text>
+              <Text style={styles.modalLabel}>Title</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Describe your complaint..."
-                placeholderTextColor="#888"
-                multiline
-                value={complaintDetails}
-                onChangeText={setComplaintDetails}
+                placeholder="Enter complaint title"
+                value={title}
+                onChangeText={setTitle}
               />
-
-              {/* Image Upload */}
+              <Text style={styles.modalLabel}>Message</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Describe your complaint"
+                multiline
+                value={message}
+                onChangeText={setMessage}
+              />
               <TouchableOpacity style={styles.imagePickerButton} onPress={pickImages}>
                 <Ionicons name="image-outline" size={20} color="#007AFF" />
                 <Text style={styles.imagePickerText}>Add Images</Text>
               </TouchableOpacity>
-
-              {/* Image Previews */}
               {selectedImages.length > 0 && (
                 <FlatList
                   data={selectedImages}
                   renderItem={renderImageItem}
                   keyExtractor={(item) => item.uri}
                   horizontal
-                  showsHorizontalScrollIndicator={false}
                   style={styles.imageList}
                 />
               )}
-
               <TouchableOpacity style={styles.submitButton} onPress={handleSubmitComplaint}>
-                <Text style={styles.submitButtonText}>Submit Complaint</Text>
+                <Text style={styles.submitButtonText}>Submit</Text>
               </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Detail Modal */}
+      <Modal visible={detailModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Complaint Details</Text>
+              <TouchableOpacity onPress={() => setDetailModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#6B48FF" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalBody}>
+              {selectedComplaint && (
+                <>
+                  <Text style={styles.modalDetail}>ID: {selectedComplaint.id}</Text>
+                  <Text style={styles.modalDetail}>Title: {selectedComplaint.title}</Text>
+                  <Text style={styles.modalDetail}>Date: {selectedComplaint.date}</Text>
+                  <Text style={styles.modalDetail}>Status: {selectedComplaint.status}</Text>
+                  <Text style={styles.modalLabel}>Message:</Text>
+                  <Text style={styles.modalText}>{selectedComplaint.message}</Text>
+                  {selectedComplaint.images.length > 0 && (
+                    <FlatList
+                      data={selectedComplaint.images}
+                      renderItem={({ item }) => (
+                        <Image source={{ uri: item.uri }} style={styles.modalImage} />
+                      )}
+                      keyExtractor={(item) => item.fileName}
+                      horizontal
+                      style={styles.imageList}
+                    />
+                  )}
+                  {selectedComplaint.wholesalerResponse && (
+                    <>
+                      <Text style={styles.modalLabel}>Wholesaler Response:</Text>
+                      <Text style={styles.modalText}>{selectedComplaint.wholesalerResponse}</Text>
+                    </>
+                  )}
+                </>
+              )}
             </ScrollView>
           </View>
         </View>
@@ -160,6 +247,7 @@ const ComplaintsSubmissionScreen = () => {
     </SafeAreaView>
   );
 };
+
 
 
 export default ComplaintsSubmissionScreen;

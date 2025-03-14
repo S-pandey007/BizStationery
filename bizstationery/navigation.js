@@ -24,6 +24,8 @@ import MessageScreen from "./screens/MessageScreen";
 import MyOrdersScreen from "./screens/MyOrdersScreen";
 import CustomizationRequestsScreen from "./screens/CustomizationRequestsScreen";
 import ComplaintsSubmissionScreen from "./screens/ComplaintsSubmissionScreen";
+import ProductListAndStatusScreen from "./screens/ProductListAndStatusScreen";
+import SettingsScreen from './screens/SettingsScreen'
 
 import MenuScreen from "./screens/Menu"; // Create this file
 import ProfileScreen from "./screens/Profile"; // Create this file
@@ -249,6 +251,18 @@ export default function Navigation() {
           <Stack.Screen
           name="ComplaintsSubmission"
           component={ComplaintsSubmissionScreen}
+          options={{ headerShown: false }}
+          />
+          
+          <Stack.Screen
+          name="ProductListAndStatus"
+          component={ProductListAndStatusScreen}
+          options={{ headerShown: false }}
+          />
+          
+          <Stack.Screen
+          name="Settings"
+          component={SettingsScreen}
           options={{ headerShown: false }}
           />
 
