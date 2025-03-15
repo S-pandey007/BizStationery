@@ -131,6 +131,8 @@ const styles = StyleSheet.create({
   removeButtonText: {
     fontSize: 16,
     color: "#FF4D4D", // Red for delete
+    textAlign:'center',
+    padding:2,
     fontWeight: "500",
   },
   saveButton: {
@@ -329,6 +331,11 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 15,
   },
+  sectionTitle:{
+    fontSize: 18,
+    fontWeight:'bold',
+    padding:10,
+  }
 });
 
 export default styles;

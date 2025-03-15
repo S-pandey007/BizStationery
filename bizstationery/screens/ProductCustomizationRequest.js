@@ -14,9 +14,12 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import styles from '../style/ProductCustomizationStyle';
+const BASE_URL = "http://192.168.245.3:8001";
 
 const ProductCustomizationRequest = ({ route }) => {
   const id = route.params.id;
+  console.log(id);
+  
   const navigation = useNavigation();
   const [customizationDetails, setCustomizationDetails] = useState('');
   const [requestStatus, setRequestStatus] = useState('Pending');
@@ -26,18 +29,18 @@ const ProductCustomizationRequest = ({ route }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch(`http://192.168.43.3:5000/api/products/${id}`);
+      const response = await fetch(`${BASE_URL}/product/${id}`);
       const data = await response.json();
-      console.log("data from API", data.product);
+      console.log("data from API", data.product.name);
       setProduct(data.product);
     };
     fetchData();
   }, []);
 
-  useEffect(() => {
-    console.log("product :", product);
-    console.log("product name:", product.product_name);
-  }, [product]);
+  // useEffect(() => {
+  //   console.log("product :", product);
+  //   console.log("product name:", product.product_name);
+  // }, [product]);
 
   // Function to pick multiple images
   const pickImages = async () => {
@@ -126,11 +129,14 @@ const ProductCustomizationRequest = ({ route }) => {
       >
         {/* Product Information */}
         <TouchableOpacity
-          onPress={() => navigation.navigate('ProductDetail', { product: product.id })}
+           onPress={() => {
+            // console.log("Navigating to ProductDetail with id:", item.id);
+            navigation.navigate("ProductDetail", { product: product._id });
+          }}
           style={styles.productSection}
         >
           <Text style={styles.sectionTitle}>Selected Product</Text>
-          <Text style={styles.productName}>{product.product_name || "Loading..."}</Text>
+          <Text style={styles.productName}>{product.name || "Loading..."}</Text>
         </TouchableOpacity>
 
         {/* Customization Request Form */}

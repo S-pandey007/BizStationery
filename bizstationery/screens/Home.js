@@ -23,8 +23,9 @@ const HomeScreen = () => {
 
     // fetch categories data
     const dispatch = useDispatch()
-    const {categoryList} = useSelector((state)=> state.categories)
-    const cartItems = useSelector((state)=> state.cart.items);
+    const categoryData = useSelector((state)=> state.categories)
+    const categoryList = categoryData.categoryList 
+    const cartItems = useSelector((state)=> state.cart.cartItems);
     // setCartCount(cartItems.length)
     const cartCounts = cartItems.length
     // console.log(cartCounts);
@@ -36,8 +37,8 @@ const HomeScreen = () => {
     },[dispatch])
   
     useEffect(()=>{
-      // console.log('category list:',categoryList.category);
-      // console.log(categoryList.category[0].image_link)
+      console.log('category list:',categoryList);
+      // console.log(categoryList.category[0].images)
       // console.log(categoryList.category[0].category)
     },[categoryList])
   
@@ -85,10 +86,10 @@ const HomeScreen = () => {
   // Render functions
   const renderCategoryItem = ({ item }) => (
     <TouchableOpacity
-    onPress={() => navigation.navigate('CategoryDetail', { category: item.category })}
+    onPress={() => navigation.navigate('CategoryDetail', { category: item._id})}
     style={styles.categoryItem}>
-      <Image source={{ uri: item.image_link }} style={styles.categoryImage} />
-      <Text style={styles.categoryName}>{item.category}</Text>
+      <Image source={{ uri: item.images }} style={styles.categoryImage} />
+      <Text style={styles.categoryName}>{item.name}</Text>
     </TouchableOpacity>
   );
 
@@ -153,7 +154,7 @@ const HomeScreen = () => {
               </TouchableOpacity>
             </View>
             <FlatList
-              data={CategoryData}
+              data={categoryList}
               renderItem={renderCategoryItem}
               // keyExtractor={(item) => item.id}
               horizontal
@@ -165,7 +166,7 @@ const HomeScreen = () => {
       case 'recommended':
         return (
           <View>
-            <Text style={styles.sectionTitle}>Recommended For You</Text>
+            <Text style={[styles.sectionTitle,{padding:12}]}>Recommended For You</Text>
             <FlatList
               data={item.data}
               renderItem={renderRecommendedItem}
@@ -179,7 +180,7 @@ const HomeScreen = () => {
       case 'featured':
         return (
           <View>
-            <Text style={styles.sectionTitle}>Featured Products</Text>
+            <Text style={[styles.sectionTitle,{padding:12}]}>Featured Products</Text>
             <FlatList
               data={item.data}
               renderItem={renderFeaturedProduct}
@@ -192,7 +193,7 @@ const HomeScreen = () => {
       case 'deals':
         return (
           <View>
-            <Text style={styles.sectionTitle}>Deals of the Day</Text>
+            <Text style={[styles.sectionTitle,{padding:12}]}>Deals of the Day</Text>
             <FlatList
               data={item.data}
               renderItem={renderDealItem}

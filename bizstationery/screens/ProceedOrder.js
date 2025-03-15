@@ -16,80 +16,74 @@ import generateInvoicePDF from "../utils/generateInvoicePDF";
 
 
 const ProceedOrder = ({ route }) => {
-const navigation = useNavigation();
+  
+  
+  const navigation = useNavigation();
   const billingData = route.params.billingData;
   console.log("billingData : ", billingData);
 
   // Logic behind Transport expenses and transport tax
-  // Transport expenses 120/kg
+  // Transport expenses 120 Rs/kg, weights in grams, convert to kg
   // Transport tax 5%
 
-  const Total_OrderWeight = billingData.map((item) => {
-    const per_item_total_weight = item.weight * item.quantity;
+  // Calculate total order weight in grams, then convert to kg
+  const Total_OrderWeight_InGrams = billingData.map((item) => {
+    const weightInGrams = Number(item.variant.weight || 0); // Weight in grams
+    const quantity = Number(item.quantity || 0);
+    const per_item_total_weight = weightInGrams * quantity;
+    console.log(`Item: ${item.name}, Weight (g): ${weightInGrams}, Quantity: ${quantity}, Total (g): ${per_item_total_weight}`);
     return per_item_total_weight;
   });
-  console.log(Total_OrderWeight);
+  console.log("Total Order Weight per item (grams):", Total_OrderWeight_InGrams);
 
-  const total_weight = Total_OrderWeight.reduce((x, y) => x + y);
-  console.log(total_weight);
+  const total_weight_in_grams = Total_OrderWeight_InGrams.reduce((x, y) => x + y, 0);
+  const total_weight = total_weight_in_grams / 1000; // Convert grams to kilograms
+  console.log("Total weight (kg):", total_weight);
 
-  const Transport_expenses_PerKG = 120;
-  const total_Transport_expenses_WithoutGST =
-    Transport_expenses_PerKG * total_weight;
-  console.log("Without gst : ", total_Transport_expenses_WithoutGST);
+  const Transport_expenses_PerKG = 120; // Rs per kg
+  const total_Transport_expenses_WithoutGST = Transport_expenses_PerKG * total_weight;
+  console.log("Without GST (Rs):", total_Transport_expenses_WithoutGST);
 
-  const Transport_tax_Rate = 5;
-  const Transport_tax =
-    (Transport_tax_Rate * total_Transport_expenses_WithoutGST) / 100;
-  console.log("Tax amount on transport : ", Transport_tax);
-  const final_Transport_expenses =
-    total_Transport_expenses_WithoutGST + Transport_tax;
-  console.log("Final Transport expenses : ", final_Transport_expenses);
+  const Transport_tax_Rate = 5; // 5% GST
+  const Transport_tax = (Transport_tax_Rate * total_Transport_expenses_WithoutGST) / 100;
+  console.log("Tax amount on transport (Rs):", Transport_tax);
 
+  const final_Transport_expenses = total_Transport_expenses_WithoutGST + Transport_tax;
+  console.log("Final Transport expenses (Rs):", final_Transport_expenses);
 
-  // product prize calculation
+  // Product price calculation (unchanged except for numeric safety)
+  const total_Product_Base_Price_Array = billingData.map((item) => Number(item.totalWithoutGST || 0));
+  const total_Product_Base_Price = total_Product_Base_Price_Array.reduce((x, y) => x + y, 0);
+  console.log("All product Base price (Rs):", total_Product_Base_Price);
 
-  // calculate total product base price
-  const total_Product_Base_Price_Array = billingData.map((item)=>{
-    return item.totalWithOutGST
-})
-const total_Product_Base_Price = total_Product_Base_Price_Array.reduce((x,y)=>x+y)
+  const all_Product_GST_Amount_Array = billingData.map((item) => Number(item.gst || 0));
+  const total_GST_Amount = all_Product_GST_Amount_Array.reduce((x, y) => x + y, 0);
+  console.log("Total GST Amount (Rs):", total_GST_Amount);
 
-console.log("All product Base price :",total_Product_Base_Price)
+  const total_Product_Prize_includingGST = total_Product_Base_Price + total_GST_Amount;
+  console.log("Total Product Prize including GST (Rs):", total_Product_Prize_includingGST);
 
-// calculate total GST on product
-const all_Prodcut_GST_Amount_Array = billingData.map((item)=>{
-    return item.GST
-})
-const total_GST_Amount = all_Prodcut_GST_Amount_Array.reduce((x,y)=> x+y)
-console.log("Total GST Amount :", total_GST_Amount);
+  const total_Product_Price_includingGST_and_transport_expenses =
+    total_Product_Prize_includingGST + final_Transport_expenses;
+  console.log(
+    "Total Product Price including GST and transport expenses (Rs):",
+    total_Product_Price_includingGST_and_transport_expenses
+  );
 
-const total_Product_Prize_includingGST =
-  total_Product_Base_Price + total_GST_Amount;
+  // Prepare all calculations to pass to the PDF generator
+  const calculations = {
+    total_weight, // In kg
+    total_Transport_expenses_WithoutGST,
+    Transport_tax,
+    final_Transport_expenses,
+    total_Product_Base_Price,
+    total_GST_Amount,
+    total_Product_Prize_includingGST,
+    total_Product_Price_includingGST_and_transport_expenses,
+    Transport_tax_Rate,
+  };
 
-  console.log("Total Product Prize including GST : ", total_Product_Prize_includingGST);
-
-
-// calculate total product prize including transport expenses and GST
-const total_Product_Price_includingGST_and_transport_expenses =
-  total_Product_Prize_includingGST + final_Transport_expenses;
-console.log("Total Product Price including GST and transport expenses : ",
-  total_Product_Price_includingGST_and_transport_expenses);
-
-// Prepare all calculations to pass to the PDF generator
-const calculations = {
-  total_weight,
-  total_Transport_expenses_WithoutGST,
-  Transport_tax,
-  final_Transport_expenses,
-  total_Product_Base_Price,
-  total_GST_Amount,
-  total_Product_Prize_includingGST,
-  total_Product_Price_includingGST_and_transport_expenses,
-  Transport_tax_Rate,
-};
-
-  // State for modals and address
+  // State for modals and address (unchanged)
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const [invoiceModalVisible, setInvoiceModalVisible] = useState(false);
   const [address, setAddress] = useState({
@@ -99,15 +93,14 @@ const calculations = {
     city: "",
     state: "",
     pincode: "",
-    country:""
-  }); // To display saved address
-//   console.log(address);
+    country: "",
+  });
 
- // Function to trigger the PDF download
- const handleDownloadInvoice = () => {
-  generateInvoicePDF(billingData, address, calculations);
-};
-  
+  // Function to trigger the PDF download (unchanged)
+  const handleDownloadInvoice = async() => {
+    console.log("generateInvoicePDF called");
+    await generateInvoicePDF(billingData, address, calculations);
+  };
   return (
     <ScrollView style={styles.container}>
       {/* Header */}

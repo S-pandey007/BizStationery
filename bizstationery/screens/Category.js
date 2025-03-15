@@ -34,8 +34,8 @@ const CategoryScreen = () => {
     const navigation = useNavigation(); 
     // fetch categories data
         const dispatch = useDispatch()
-        const {categoryList} = useSelector((state)=> state.categories)
-        const CategoryData = categoryList.category
+        const categoryData = useSelector((state)=> state.categories)
+    const categoryList = categoryData.categoryList 
         useEffect(() => {
           dispatch(fetchCategories())
         },[dispatch])
@@ -48,9 +48,9 @@ const CategoryScreen = () => {
 
  
   const renderItem = ({ item }) => (
-    <Pressable style={styles.itemContainer} onPress={() => navigation.navigate('CategoryDetail', { category: item.category })}>
-      <Image source={{ uri:item.image_link}} style={styles.image} />
-      <Text style={styles.title}>{item.category}</Text>
+    <Pressable style={styles.itemContainer} onPress={() => navigation.navigate('CategoryDetail', { category: item._id })}>
+      <Image source={{ uri:item.images}} style={styles.image} />
+      <Text style={styles.title}>{item.name}</Text>
     </Pressable>
   );
 
@@ -64,7 +64,7 @@ const CategoryScreen = () => {
         <Text style={styles.header}>Stationery Items</Text>
       </View>
       <FlatList
-        data={CategoryData}
+        data={categoryList}
         // keyExtractor={(item) => item.id}
         renderItem={renderItem}
         numColumns={2}

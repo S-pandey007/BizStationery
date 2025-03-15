@@ -1,168 +1,194 @@
+import { StyleSheet, Dimensions } from "react-native";
 
-import { StyleSheet, Dimensions } from 'react-native';
+const { width } = Dimensions.get("window");
 
-const { width, height } = Dimensions.get('window');
-
-const styles = StyleSheet.create({
+export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff', // Light gray background
+    backgroundColor: "#fff",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#fff",
+    elevation: 2,
   },
   backButton: {
-    marginRight: 15,
+    padding: 5,
   },
   headerText: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#333',
-    flex: 1,
-    textAlign: 'center',
-  },
-  scrollContainer: {
-    flex: 1,
-    marginTop: 70, // Space for the fixed header
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginLeft: 10,
   },
   contentContainer: {
     paddingBottom: 20,
-    paddingHorizontal: 15,
   },
-  imageSlider: {
-    height: height * 0.4, // 40% of screen height for images
+  imageContainer: {
+    position: "relative",
   },
   productImage: {
     width: width,
-    height: height * 0.4,
-    resizeMode: 'cover',
+    height: 300,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
-  productInfo: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+  imageDots: {
+    flexDirection: "row",
+    justifyContent: "center",
+    position: "absolute",
+    bottom: 10,
+    width: "100%",
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ccc",
+    marginHorizontal: 4,
+  },
+  activeDot: {
+    backgroundColor: "#007AFF",
+  },
+  infoContainer: {
     padding: 20,
-    marginTop: 15,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
-  productTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 10,
-  },
-  productBrand: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 5,
-  },
-  productPrice: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 10,
-  },
-  discountText: {
-    fontSize: 14,
-    color: '#4CAF50', // Green for discount
-    fontWeight: '500',
+  productName: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 8,
   },
   productDescription: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 15,
-    lineHeight: 22,
+    color: "#666",
+    marginBottom: 20,
   },
-  productDetails: {
-    marginBottom: 15,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 10,
   },
-  bulkMessage: {
-    fontSize: 16,
-    color: '#FF4D4D', // Red for warning
-    marginBottom: 15,
-    fontWeight: '500',
+  variantList: {
+    marginBottom: 20,
   },
-  ratings: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
+  variantButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    marginRight: 10,
+    backgroundColor: "#fff",
   },
-  ratingText: {
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 5,
+  selectedVariantButton: {
+    borderColor: "#007AFF",
+    backgroundColor: "#e6f0ff",
+  },
+  variantText: {
+    fontSize: 14,
+    color: "#666",
+  },
+  selectedVariantText: {
+    color: "#007AFF",
+    fontWeight: "bold",
+  },
+  priceContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  price: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#007AFF",
+  },
+  stock: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  detailsContainer: {
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
+    elevation: 2,
+  },
+  detailText: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 5,
   },
   quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
   },
   quantityButton: {
-    backgroundColor: '#F5F5F5',
-    padding: 10,
-    borderRadius: 8,
-    marginHorizontal: 10,
+    width: 40,
+    height: 40,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 2,
   },
   quantityButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 20,
+    color: "#007AFF",
   },
   quantityText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "bold",
+    marginHorizontal: 20,
+    color: "#333",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
   },
   addToCartButton: {
-    backgroundColor: '#6B48FF', // Purple for action
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#007AFF",
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 15,
+    marginRight: 10,
   },
   inCartButton: {
-    backgroundColor: '#4CAF50', // Green when added to cart
-  },
-  addToCartText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    backgroundColor: "#28a745",
   },
   customizeButton: {
-    backgroundColor: '#FF9800', // Orange for customization
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#28a745",
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
   },
-  customizeText: {
+  buttonText: {
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    marginLeft: 8,
   },
-  stockStatus: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
     fontSize: 16,
-    fontWeight: '500',
-    marginVertical: 5,
+    color: "#666",
   },
 });
-
-export default styles;

@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#333",
+    
   },
   categoryButton: {
     backgroundColor: "#6B48FF",

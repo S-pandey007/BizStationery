@@ -2,119 +2,141 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
+  ScrollView,
   Image,
   TouchableOpacity,
-  ScrollView,
-  StyleSheet,
+  FlatList,
   Dimensions,
   Alert,
-  Pressable,
-  ActivityIndicator
+  ActivityIndicator,
+  ToastAndroid,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons"; // For icons
-import styles from "../style/ProductDetailStyle"; // Import styles from the separate file
-import { useNavigation } from '@react-navigation/native';
-import {useDispatch,useSelector} from 'react-redux'
-import { addToCart,updateQuantity } from "../redux/slice/cartSlice";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, updateQuantity } from "../redux/slice/cartSlice";
+import styles from "../style/ProductDetailStyle";
+import Toast from "react-native-toast-message";
 
+const { width } = Dimensions.get("window");
+const BASE_URL = "http://192.168.245.3:8001";
 
 const ProductDetail = ({ route }) => {
-  // Sample product data (replace with real data from API or props)
-  const id = route.params.product;
-  console.log(id);
+  const { product: id } = route.params;
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const cartItems= useSelector((state)=> state.cart.items)
+  const cartItems = useSelector((state) => state.cart.cartItems) || [];
 
-  const [product, setProduct] = useState({}); // Initialize as null to handle undefined
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [quantity, setQuantity] = useState(25);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true); // Start loading
-        const response = await fetch(`http://192.168.245.3:5000/api/products/${id}`);
+        setLoading(true);
+        const response = await fetch(`${BASE_URL}/product/${id}`);
         const data = await response.json();
-        console.log("data from API", data.product);
         setProduct(data.product);
-        console.log( product.bulk_discount.min_quantity);
-        
+        setSelectedVariant(data.product.variants ? data.product.variants[0] : null);
       } catch (error) {
-        console.log("Something going wrong, data not fetched from API", error);
-        // Alert.alert('Error', 'Failed to load product. Please try again.');
+        console.log("Error fetching data:", error);
+        Alert.alert("Error", "Failed to load product. Please try again.");
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     };
-
     fetchData();
-  }, [id]); // Add id as dependency to refetch if it changes
+  }, [id]);
 
-  // check if product is in cart
   const isInCart = cartItems.some((item)=> item.id === id)
+  
 
+  console.log("isInCart:", isInCart);
 
-  // State for quantity and cart
-  const [quantity, setQuantity] = useState(25); // Start with MOQ to simplify initial bulk order
-  const [inCart, setInCart] = useState(false);
-
-  // Determine stock status color and text (only if product exists)
-  const getStockStatus = () => {
-    if (!product) return { text: "Loading...", color: "#666" }; // Default while loading
-    if (product.stock_quantity >= 50) {
-      return { text: "In Stock", color: "#4CAF50" }; // Green
-    } else if (product.stock_quantity > 0 && product.stock_quantity < 50) {
-      return { text: "Low Stock", color: "#FFCA28" }; // Yellow
-    } else {
-      return { text: "Out of Stock", color: "#FF4D4D" }; // Red
-    }
+  const getStockStatus = (stock) => {
+    if (stock >= 50) return { text: "In Stock", color: "#28a745" };
+    if (stock > 0) return { text: "Low Stock", color: "#FFCA28" };
+    return { text: "Out of Stock", color: "#dc3545" };
   };
 
-  // Handle quantity decrement with MOQ (50) and step of 25
   const decreaseQuantity = () => {
-    if (!product) return;
-    if (quantity<25) return 
+    if (quantity <= 25) return;
     setQuantity(quantity - 25);
   };
 
-  // Handle quantity increment with stock limit and step of 25
   const increaseQuantity = () => {
-    if (!product) return; // Prevent action if product is not loaded
+    const maxStock = selectedVariant?.stock || product?.stock_quantity;
+    const cartItem = cartItems.find(
+      (item) =>
+        item.id === id &&
+        (item.variant?.quality || "default") === (selectedVariant?.attributes.quality || "default")
+    );
+    if (!maxStock || (cartItem?.quantity || 0) + quantity + 25 > maxStock) return;
     setQuantity(quantity + 25);
   };
 
-  // Handle adding to cart with MOQ validation
   const handleAddToCart = () => {
-    if (!product) return; // Prevent action if product is not loaded
-    const stockStatus = getStockStatus();
+    if (!product || !selectedVariant) return;
+    const stockStatus = getStockStatus(selectedVariant?.stock || product.stock_quantity);
     if (stockStatus.text === "Out of Stock") {
       Alert.alert("Error", "This product is out of stock.");
       return;
     }
-
-    // dispatch action to add to cart
+  
+    // Log product to debug
+    console.log("Product before addToCart:", product);
+  
+    // Use product._id if id is missing
+    const productId = product.id || product._id || id; // Fallback to route.params.id
+  
     dispatch(
       addToCart({
-        id: product.id,
-        product_name:product.product_name,
-        price: product.price,
-        image_link : product.image_link,
+        id: productId, // Ensure valid ID
+        product_name: product.name || "Unknown Product", // Default if undefined
+        price: product.price
+          ? product.price + (selectedVariant?.priceAdjustment || 0)
+          : selectedVariant?.priceAdjustment || 0,
+        image_link: product.images?.[0] || product.image_link || "https://via.placeholder.com/150",
         quantity,
-        stock_quantity:product.stock_quantity,
-        weight:product.weight,
-        gst_rate: product.gst_rate,
-        hsn_code: product.hsn_code,
+        stock_quantity: selectedVariant?.stock || product.stock_quantity || 0,
+        weight: product.weight || 0, // Default if undefined
+        gst_rate: product.gst_rate || 0,
+        hsn_code: product.hsn_code || "Unknown",
+        variant: selectedVariant?.attributes || {},
       })
-    )
-
-    setInCart(true)
+    );
+  
+    // setQuantity(25);
+    ToastAndroid.show("Added to cart!", ToastAndroid.SHORT);
   };
 
+  const renderImageItem = ({ item }) => (
+    <Image source={{ uri: item }} style={styles.productImage} resizeMode="cover" />
+  );
 
-  const stockStatus = getStockStatus();
+  const renderVariantItem = ({ item }) => (
+    <TouchableOpacity
+      style={[
+        styles.variantButton,
+        selectedVariant?._id === item._id && styles.selectedVariantButton,
+      ]}
+      onPress={() => setSelectedVariant(item)}
+    >
+      <Text
+        style={[
+          styles.variantText,
+          selectedVariant?._id === item._id && styles.selectedVariantText,
+        ]}
+      >
+        {item.attributes.quality.charAt(0).toUpperCase() + item.attributes.quality.slice(1)}
+      </Text>
+    </TouchableOpacity>
+  );
 
-  // Render loading or product details
-  if (loading) {
+  if (loading || !product) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6B48FF" />
@@ -123,117 +145,133 @@ const ProductDetail = ({ route }) => {
     );
   }
 
+  const stockStatus = getStockStatus(selectedVariant?.stock || product.stock_quantity);
+
   return (
     <View style={styles.container}>
-      {/* Fixed Header with Back Arrow */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerText}>Product Details</Text>
       </View>
 
-      {/* Scrollable Content */}
-      <ScrollView
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Image Slider */}
-        <ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          style={styles.imageSlider}
-        >
-          
-            <Image
-              source={{ uri: product.image_link }}
-              style={styles.productImage}
-            />
-        
-        </ScrollView>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        <View style={styles.imageContainer}>
+          <FlatList
+            data={product.images || [product.image_link]}
+            renderItem={renderImageItem}
+            keyExtractor={(item, index) => index.toString()}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(event) => {
+              const index = Math.floor(event.nativeEvent.contentOffset.x / width);
+              setSelectedImageIndex(index);
+            }}
+          />
+          <View style={styles.imageDots}>
+            {(product.images || [product.image_link]).map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  selectedImageIndex === index && styles.activeDot,
+                ]}
+              />
+            ))}
+          </View>
+        </View>
 
-        {/* Product Information */}
-        <View style={styles.productInfo}>
-          <Text style={styles.productTitle}>{product.product_name}</Text>
-          <Text style={styles.productBrand}>Brand: {product.brand}</Text>
-          <Text style={styles.productPrice}>
-            {`Rs.${product.price}`}
-            {/* {quantity >= product.bulk_discount.min_quantity && (
-              <Text style={styles.discountText}>
-                (Save {product.bulk_discount.discount_percent}% on bulk order)
-              </Text>
-            )} */}
-          </Text>
+        <View style={styles.infoContainer}>
+          <Text style={styles.productName}>{product.product_name}</Text>
           <Text style={styles.productDescription}>{product.description}</Text>
-          <View style={styles.productDetails}>
-            <Text>Weight: {product.weight} kg</Text>
-            <Text>Category: {product.category}</Text>
-            <Text>Seller Location: {product.seller_state}</Text>
-            <Text style={[styles.stockStatus, { color: stockStatus.color }]}>
-              {stockStatus.text}
+
+          {product.variants && product.variants.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Select Variant</Text>
+              <FlatList
+                data={product.variants}
+                renderItem={renderVariantItem}
+                keyExtractor={(item) => item._id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.variantList}
+              />
+            </>
+          )}
+
+          <View style={styles.priceContainer}>
+            <Text style={styles.price}>
+              ₹{(product.price ? product.price + (selectedVariant?.priceAdjustment || 0) : selectedVariant?.priceAdjustment || 0).toFixed(2)}
+            </Text>
+            <Text style={[styles.stock, { color: stockStatus.color }]}>
+              {stockStatus.text}: {selectedVariant?.stock || product.stock_quantity}
             </Text>
           </View>
 
-          {/* Bulk Order Message */}
-          {/* <Text style={styles.bulkMessage}>
-            This product is available only if you order at least{" "}
-            {product.bulk_discount.min_quantity} items.
-          </Text> */}
-
-          {/* Ratings & Reviews */}
-          <View style={styles.ratings}>
-            <Ionicons name="star" size={20} color="#FFD700" />
-            <Text style={styles.ratingText}>
-              {product.rating} ({product.reviews} reviews)
-            </Text>
+          <View style={styles.detailsContainer}>
+            <Text style={styles.sectionTitle}>Details</Text>
+            {selectedVariant ? (
+              <>
+                <Text style={styles.detailText}>Material: {selectedVariant.attributes.material}</Text>
+                <Text style={styles.detailText}>Size: {selectedVariant.attributes.size}</Text>
+                <Text style={styles.detailText}>Weight: {selectedVariant.attributes.weight}g</Text>
+                <Text style={styles.detailText}>Pages: {selectedVariant.attributes.pages}</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.detailText}>Weight: {product.weight} kg</Text>
+                <Text style={styles.detailText}>Category: {product.category}</Text>
+                <Text style={styles.detailText}>Seller Location: {product.seller_state}</Text>
+              </>
+            )}
           </View>
 
           <View style={styles.quantityContainer}>
-            <Pressable
+            <TouchableOpacity
               style={styles.quantityButton}
               onPress={decreaseQuantity}
-              disabled={
-                // quantity <= product.bulk_discount.min_quantity ||
-                stockStatus.text === "Out of Stock"
-              }
+              disabled={quantity <= 25 || stockStatus.text === "Out of Stock"}
             >
               <Text style={styles.quantityButtonText}>-</Text>
-            </Pressable>
+            </TouchableOpacity>
             <Text style={styles.quantityText}>{quantity}</Text>
-            <Pressable
+            <TouchableOpacity
               style={styles.quantityButton}
               onPress={increaseQuantity}
               disabled={
-                // quantity + 25 > product.stock_quantity ||
+                (selectedVariant?.stock || product.stock_quantity) <=
+                  (cartItems.find(
+                    (item) =>
+                      item.id === id &&
+                      (item.variant?.quality || "default") === (selectedVariant?.attributes.quality || "default")
+                  )?.quantity || 0) + quantity ||
                 stockStatus.text === "Out of Stock"
               }
             >
               <Text style={styles.quantityButtonText}>+</Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={[styles.addToCartButton, isInCart && styles.inCartButton]}
-            onPress={handleAddToCart}
-            disabled={inCart || stockStatus.text === "Out of Stock"}
-          >
-            <Text style={styles.addToCartText}>
-              {isInCart ? "Added to Cart" : "Add to Cart"}
-            </Text>
-          </TouchableOpacity>
 
-          {/* Customization Request Button */}
-          <TouchableOpacity
-            style={styles.customizeButton}
-            onPress={()=> navigation.navigate('ProductCustomization',{id:product.id})}
-            disabled={stockStatus.text === "Out of Stock"}
-          >
-            <Text style={styles.customizeText}>Request Customization</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.addToCartButton, isInCart && styles.inCartButton]}
+              onPress={handleAddToCart}
+              disabled={stockStatus.text === "Out of Stock"}
+            >
+              <Ionicons name="cart-outline" size={20} color="#fff" />
+              <Text style={styles.buttonText}>{isInCart ? "Added to Cart" : "Add to Cart"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.customizeButton}
+              onPress={() => navigation.navigate("ProductCustomization", { id: product.id })}
+              disabled={stockStatus.text === "Out of Stock"}
+            >
+              <Ionicons name="color-palette-outline" size={20} color="#fff" />
+              <Text style={styles.buttonText}>Customize</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </View>
