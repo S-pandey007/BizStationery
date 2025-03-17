@@ -1,9 +1,9 @@
 import { setCategories, setLoading as setCategoryLoading, setError as setCategoryError } from '../redux/slice/categorySlice';
-
 // const BASE_URL = 'http://192.168.245.3:5000/api/';
-const BASE_URL = 'http://192.168.245.3:8001/';
-
-
+// const BASE_URL = 'http://192.168.245.3:8001/';
+import   Constant from 'expo-constants'
+const BASE_URL = Constant.expoConfig.extra.API_URL;
+console.log(BASE_URL)
 export const fetchCategories = () => async (dispatch) => {
   try {
     console.log("fetchCategories called");

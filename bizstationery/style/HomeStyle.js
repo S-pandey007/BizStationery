@@ -1,5 +1,4 @@
 import { StyleSheet, Dimensions } from 'react-native';
-
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
@@ -107,7 +106,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#333",
-    
   },
   categoryButton: {
     backgroundColor: "#6B48FF",
@@ -174,8 +172,8 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   featuredProductImage: {
-    width: 150,
-    height: 150,
+    width: 100,
+    height: 100,
     borderRadius: 8,
   },
   featuredProductDetails: {
@@ -274,6 +272,69 @@ const styles = StyleSheet.create({
   },
   // Removed unused styles
   // contentText, placeholderContent, placeholderText were not used in the latest HomeScreen
+
+  // product cart
+  cardContainer: {
+    width: 300, // Fixed width for the card
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    elevation: 3, // Shadow for Android
+    shadowColor: "#000", // Shadow for iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    margin: 10,
+    paddingBottom: 15,
+    alignSelf: "center", // Center the card horizontally
+  },
+  productImage: {
+    width: "100%",
+    height: 200, // Medium-sized image
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  detailsContainer: {
+    padding: 15,
+  },
+  productName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 5,
+    textAlign: "center",
+  },
+  productPrice: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#6B48FF", // Purple color for price
+    marginBottom: 10,
+  },
+  attributesContainer: {
+    marginBottom: 10,
+  },
+  attributesTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#555",
+    marginBottom: 5,
+  },
+  attributeText: {
+    fontSize: 14,
+    color: "#666",
+    marginLeft: 10,
+  },
+  materialContainer: {},
+  materialTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#555",
+    marginBottom: 5,
+  },
+  materialText: {
+    fontSize: 14,
+    color: "#666",
+    marginLeft: 10,
+  },
 });
 
 export default styles;

@@ -16,7 +16,9 @@ import styles from "../style/RegistrationStyle";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 //import useNavigation
 import { useNavigation } from "@react-navigation/native";
-
+import   Constant from 'expo-constants'
+const BASE_URL = Constant.expoConfig.extra.API_URL;
+console.log(BASE_URL)
 // functional components for Contact Details and GSTIN Details
 
 const ContactDetail = ({
@@ -236,7 +238,7 @@ const RegistrationScreen = () => {
     const email = formData.email;
     console.log(email);
     try {
-      const response = await fetch("http://192.168.245.3:8001/user/sendotp", {
+      const response = await fetch(`${BASE_URL}user/sendotp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -270,7 +272,7 @@ const RegistrationScreen = () => {
     console.log(email);
     try {
       // const response = await axios.post('http://192.168.43.3:8001/user/verifyotp', { email, otp });
-      const response = await fetch("http://192.168.245.3:8001/user/verifyotp", {
+      const response = await fetch(`${BASE_URL}user/verifyotp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -314,7 +316,7 @@ const RegistrationScreen = () => {
     }
 
     try {
-      const response = await fetch("http://192.168.245.3:8001/user/gstin", {
+      const response = await fetch(`${BASE_URL}user/gstin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

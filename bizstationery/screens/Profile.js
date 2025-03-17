@@ -18,7 +18,9 @@ import { Picker } from '@react-native-picker/picker';
 import * as Animatable from 'react-native-animatable';
 import styles from '../style/ProfileStyle';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import   Constant from 'expo-constants'
+const BASE_URL = Constant.expoConfig.extra.API_URL;
+console.log(BASE_URL)
 const ProfileScreen = () => {
   const [userData, setUserData] = useState(null);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
@@ -50,7 +52,7 @@ const ProfileScreen = () => {
       const email = await AsyncStorage.getItem('userEmail');
       if (!email) return;
   
-      const response = await fetch(`http://192.168.245.3:8001/retailer/profile/${email}`);
+      const response = await fetch(`${BASE_URL}retailer/profile/${email}`);
       const result = await response.json();
       if (result.success) {
         const data = {
@@ -130,7 +132,7 @@ const ProfileScreen = () => {
 
   const saveData = async (data) => {
     try {
-      const response = await fetch('http://192.168.245.3:8001/retailer/profile', {
+      const response = await fetch(`${BASE_URL}retailer/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

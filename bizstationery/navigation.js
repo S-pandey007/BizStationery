@@ -26,6 +26,8 @@ import CustomizationRequestsScreen from "./screens/CustomizationRequestsScreen";
 import ComplaintsSubmissionScreen from "./screens/ComplaintsSubmissionScreen";
 import ProductListAndStatusScreen from "./screens/ProductListAndStatusScreen";
 import SettingsScreen from './screens/SettingsScreen'
+import SearchScreen from "./screens/SearchScreen";
+
 
 import MenuScreen from "./screens/Menu"; // Create this file
 import ProfileScreen from "./screens/Profile"; // Create this file
@@ -263,6 +265,12 @@ export default function Navigation() {
           <Stack.Screen
           name="Settings"
           component={SettingsScreen}
+          options={{ headerShown: false }}
+          />
+          
+          <Stack.Screen
+          name="Search"
+          component={SearchScreen}
           options={{ headerShown: false }}
           />
 

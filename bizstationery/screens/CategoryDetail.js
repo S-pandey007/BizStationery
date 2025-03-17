@@ -3,8 +3,10 @@ import { View, Text, FlatList, Image, Pressable, ActivityIndicator } from 'react
 import styles from '../style/CategoryDetailStyle'; // Import styles from the separate file
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-
-const BASE_URL = "http://192.168.245.3:8001"
+import   Constant from 'expo-constants'
+const BASE_URL = Constant.expoConfig.extra.API_URL;
+console.log(BASE_URL)
+// const BASE_URL = "http://192.168.245.3:8001"
 
 const CategoryDetail = ({route}) => {
   const navigation = useNavigation();
@@ -20,7 +22,7 @@ const CategoryDetail = ({route}) => {
         setLoading(true); // Start loading
         // const response = await fetch(`http://192.168.245.3:5000/api/category/${category}`);
         const response = await fetch(
-          `${BASE_URL}/product/bycategory/${id}`
+          `${BASE_URL}product/bycategory/${id}`
         );
         const data = await response.json();
         // console.log('Data from API:', data.products);

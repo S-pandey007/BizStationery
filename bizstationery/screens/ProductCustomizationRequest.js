@@ -14,7 +14,10 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import styles from '../style/ProductCustomizationStyle';
-const BASE_URL = "http://192.168.245.3:8001";
+// const BASE_URL = "http://192.168.245.3:8001";
+import   Constant from 'expo-constants'
+const BASE_URL = Constant.expoConfig.extra.API_URL;
+console.log(BASE_URL)
 
 const ProductCustomizationRequest = ({ route }) => {
   const id = route.params.id;
@@ -29,7 +32,7 @@ const ProductCustomizationRequest = ({ route }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch(`${BASE_URL}/product/${id}`);
+      const response = await fetch(`${BASE_URL}product/${id}`);
       const data = await response.json();
       console.log("data from API", data.product.name);
       setProduct(data.product);

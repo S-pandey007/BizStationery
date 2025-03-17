@@ -12,6 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "extra":{
+      "API_URL":"http://192.168.62.3:8001/"
+    },
     "ios": {
       "supportsTablet": true
     },

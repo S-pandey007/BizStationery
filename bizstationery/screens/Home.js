@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,125 +8,173 @@ import {
   FlatList,
   TextInput,
   Pressable,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import styles from '../style/HomeStyle';
+  RefreshControl,
+  StyleSheet,
+  ToastAndroid,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import styles from "../style/HomeStyle";
 import { useNavigation } from "@react-navigation/native";
-import {fetchCategories} from '../api/apiService';
-import {useSelector , useDispatch} from 'react-redux'
+import { fetchCategories } from "../api/apiService";
+import { useSelector, useDispatch } from "react-redux";
+import Constants from "expo-constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const BASE_URL = Constants.expoConfig.extra.API_URL;
+console.log(BASE_URL);
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  
-  const [searchQuery, setSearchQuery] = useState('');
-  // const [cartCount, setCartCount] = useState();
+  const [searchQuery, setSearchQuery] = useState("");
+  const dispatch = useDispatch();
+  const categoryData = useSelector((state) => state.categories);
+  const categoryList = categoryData.categoryList;
+  const cartItems = useSelector((state) => state.cart.cartItems);
+  const cartCounts = cartItems.length;
 
-    // fetch categories data
-    const dispatch = useDispatch()
-    const categoryData = useSelector((state)=> state.categories)
-    const categoryList = categoryData.categoryList 
-    const cartItems = useSelector((state)=> state.cart.cartItems);
-    // setCartCount(cartItems.length)
-    const cartCounts = cartItems.length
-    // console.log(cartCounts);
-    // setCartCount(cartCounts)
+  const [recommendedData, setRecommendedData] = useState([]);
+  const [featuredData, setFeaturedData] = useState([]);
+  const [productCart, setProductCart] = useState(null);
+  const [refreshing, setRefreshing] = useState(false); // State for refresh control
+  const [userName, setUserName] = useState();
+  const fetchLocalUser = async () => {
+    const savedUserData = await AsyncStorage.getItem("userData");
+    const userData = savedUserData ? JSON.parse(savedUserData) : null;
+    // console.log("User Data from AsyncStorage:", userData.name.split(' ')[0]);
+    setUserName(userData.name.split(" ")[0]);
+  };
+  fetchLocalUser();
+  // Fetch all data (initial and refresh)
+  const fetchAllData = async () => {
+    try {
+      // Fetch random products
+      const randomResponse = await fetch(`${BASE_URL}product/random`);
+      const randomData = await randomResponse.json();
+      // console.log("random data", randomData.products[0]?.variants);
+      setRecommendedData(randomData.products || []);
 
-    const CategoryData = categoryList.category
-    useEffect(() => {
-      dispatch(fetchCategories())
-    },[dispatch])
-  
-    useEffect(()=>{
-      console.log('category list:',categoryList);
-      // console.log(categoryList.category[0].images)
-      // console.log(categoryList.category[0].category)
-    },[categoryList])
-  
+      // Fetch featured products
+      const featuredResponse = await fetch(`${BASE_URL}product/featured`);
+      const featuredDataResponse = await featuredResponse.json();
+      // console.log("featured data", featuredDataResponse.products);
+      setFeaturedData(featuredDataResponse.products || []);
+
+      // Fetch product cart
+      const cartResponse = await fetch(`${BASE_URL}product/productCart`);
+      const cartData = await cartResponse.json();
+      // console.log("product cart data", cartData.products[0]);
+      setProductCart(cartData.products[0] || null);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setRecommendedData([]);
+      setFeaturedData([]);
+      setProductCart(null);
+    }
+  };
+
+  // Initial fetch on mount
+  useEffect(() => {
+    dispatch(fetchCategories());
+    fetchAllData();
+  }, [dispatch]);
+
+  // Handle pull-to-refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAllData(); // Re-fetch all data
+    setRefreshing(false);
+  };
 
   const IMAGE_URL =
-    'https://th.bing.com/th/id/OIP.iyX8lP4wxAZzW7Fa3JWhawHaGD?w=1000&h=818&rs=1&pid=ImgDetMain';
+    "https://th.bing.com/th/id/OIP.iyX8lP4wxAZzW7Fa3JWhawHaGD?w=1000&h=818&rs=1&pid=ImgDetMain";
 
-  const categories = [
-    { id: '1', name: 'Electronics', image: IMAGE_URL },
-    { id: '2', name: 'Fashion', image: IMAGE_URL },
-    { id: '3', name: 'Home', image: IMAGE_URL },
-    { id: '4', name: 'Books', image: IMAGE_URL },
-  ];
-
-  const recommendedItems = [
-    { id: '1', name: 'Smartphone', image: IMAGE_URL },
-    { id: '2', name: 'Jacket', image: IMAGE_URL },
-    { id: '3', name: 'Chair', image: IMAGE_URL },
-    { id: '4', name: 'Novel', image: IMAGE_URL },
-  ];
-
-  const featuredProducts = [
-    { id: '1', name: 'Wireless Earbuds', price: '$49.99', image: IMAGE_URL },
-    { id: '2', name: 'Leather Bag', price: '$89.99', image: IMAGE_URL },
-    { id: '3', name: 'Smart Watch', price: '$129.99', image: IMAGE_URL },
-  ];
-
-  const dealsOfTheDay = [
-    { id: '1', name: 'Bluetooth Speaker', price: '$29.99', originalPrice: '$49.99', image: IMAGE_URL },
-    { id: '2', name: 'Sneakers', price: '$39.99', originalPrice: '$69.99', image: IMAGE_URL },
-    { id: '3', name: 'Table Lamp', price: '$19.99', originalPrice: '$34.99', image: IMAGE_URL },
-  ];
-
-  // Data structure for the single FlatList
   const sections = [
-    { type: 'search', data: null },
-    { type: 'promo', data: IMAGE_URL },
-    { type: 'categories', data: categories },
-    { type: 'recommended', data: recommendedItems },
-    { type: 'featured', data: featuredProducts },
-    { type: 'deals', data: dealsOfTheDay },
-    { type: 'footer', data: IMAGE_URL },
+    { type: "search", data: null },
+    { type: "promo", data: IMAGE_URL },
+    { type: "categories", data: categoryList },
+    { type: "recommended", data: recommendedData },
+    { type: "featured", data: featuredData },
+    { type: "deals", data: recommendedData },
+    { type: "productCart", data: productCart },
+    { type: "footer", data: IMAGE_URL },
   ];
 
-  // Render functions
   const renderCategoryItem = ({ item }) => (
     <TouchableOpacity
-    onPress={() => navigation.navigate('CategoryDetail', { category: item._id})}
-    style={styles.categoryItem}>
+      onPress={() =>
+        navigation.navigate("CategoryDetail", { category: item._id })
+      }
+      style={styles.categoryItem}
+    >
       <Image source={{ uri: item.images }} style={styles.categoryImage} />
       <Text style={styles.categoryName}>{item.name}</Text>
     </TouchableOpacity>
   );
 
   const renderRecommendedItem = ({ item }) => (
-    <TouchableOpacity style={styles.recommendedItem}>
-      <Image source={{ uri: item.image }} style={styles.recommendedImage} />
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("ProductDetail", { product: item._id })
+      }
+      style={styles.recommendedItem}
+    >
+      <Image source={{ uri: item.images[0] }} style={styles.recommendedImage} />
       <Text style={styles.recommendedName}>{item.name}</Text>
     </TouchableOpacity>
   );
 
   const renderFeaturedProduct = ({ item }) => (
-    <TouchableOpacity style={styles.featuredProductItem}>
-      <Image source={{ uri: item.image }} style={styles.featuredProductImage} />
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("ProductDetail", { product: item._id })
+      }
+      style={styles.featuredProductItem}
+    >
+      <Image
+        source={{ uri: item.images[0] }}
+        style={styles.featuredProductImage}
+      />
       <View style={styles.featuredProductDetails}>
         <Text style={styles.featuredProductName}>{item.name}</Text>
-        <Text style={styles.featuredProductPrice}>{item.price}</Text>
+        <Text style={styles.featuredProductPrice}>
+          {item.variants[0].attributes.material}
+        </Text>
       </View>
     </TouchableOpacity>
   );
 
   const renderDealItem = ({ item }) => (
-    <TouchableOpacity style={styles.dealItem}>
-      <Image source={{ uri: item.image }} style={styles.dealImage} />
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("ProductDetail", { product: item._id })
+      }
+      style={styles.dealItem}
+    >
+      <Image source={{ uri: item.images[0] }} style={styles.dealImage} />
       <Text style={styles.dealName}>{item.name}</Text>
       <View style={styles.dealPriceContainer}>
-        <Text style={styles.dealPrice}>{item.price}</Text>
-        <Text style={styles.dealOriginalPrice}>{item.originalPrice}</Text>
+        <Text style={styles.dealPrice}>
+          ₹{item.variants[0].priceAdjustment}
+        </Text>
+        {/* hot dals sale offer custimized */}
+        <Text style={styles.dealOriginalPrice}>
+          ₹{item.variants[0].priceAdjustment + 20}
+        </Text>
       </View>
     </TouchableOpacity>
   );
 
   const renderSection = ({ item }) => {
     switch (item.type) {
-      case 'search':
+      case "search":
         return (
           <View style={styles.searchContainer}>
-            <Ionicons name="search-outline" size={20} color="#888" style={styles.searchIcon} />
+            <Ionicons
+              name="search-outline"
+              size={20}
+              color="#888"
+              style={styles.searchIcon}
+            />
             <TextInput
               style={styles.searchInput}
               placeholder="Search products..."
@@ -134,14 +182,26 @@ const HomeScreen = () => {
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
-            <Pressable style={styles.searchPressable}>
+            <Pressable
+              onPress={() => {
+                if (searchQuery.trim() === "") {
+                  ToastAndroid.show(
+                    "Please enter a search query",
+                    ToastAndroid.SHORT
+                  );
+                  return;
+                }
+                navigation.navigate("Search", { query: searchQuery });
+              }}
+              style={styles.searchPressable}
+            >
               <Text style={styles.searchPressableText}>Search</Text>
             </Pressable>
           </View>
         );
-      case 'promo':
+      case "promo":
         return <Image source={{ uri: item.data }} style={styles.promoImage} />;
-      case 'categories':
+      case "categories":
         return (
           <View>
             <View style={styles.sectionHeader}>
@@ -154,86 +214,120 @@ const HomeScreen = () => {
               </TouchableOpacity>
             </View>
             <FlatList
-              data={categoryList}
+              data={item.data}
               renderItem={renderCategoryItem}
-              // keyExtractor={(item) => item.id}
               horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.categoryList}
             />
           </View>
         );
-      case 'recommended':
+      case "recommended":
         return (
           <View>
-            <Text style={[styles.sectionTitle,{padding:12}]}>Recommended For You</Text>
+            <Text style={[styles.sectionTitle, { padding: 12 }]}>
+              Recommended For You
+            </Text>
             <FlatList
               data={item.data}
               renderItem={renderRecommendedItem}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item._id}
               horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.recommendedList}
             />
           </View>
         );
-      case 'featured':
+      case "featured":
         return (
           <View>
-            <Text style={[styles.sectionTitle,{padding:12}]}>Featured Products</Text>
+            <Text style={[styles.sectionTitle, { padding: 12 }]}>
+              Featured Products
+            </Text>
             <FlatList
               data={item.data}
               renderItem={renderFeaturedProduct}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false} // Disable nested scrolling
+              keyExtractor={(item) => item._id}
+              scrollEnabled={false}
               style={styles.featuredList}
             />
           </View>
         );
-      case 'deals':
+      case "productCart":
+        return item.data ? (
+          <Pressable
+            onPress={() =>
+              navigation.navigate("ProductDetail", { product: item.data._id })
+            }
+            style={styles.cardContainer}
+          >
+            <Text style={[styles.sectionTitle, { padding: 12 }]}>
+              Product Spotlight
+            </Text>
+            <Image
+              source={{ uri: item.data.images[0] }}
+              style={styles.productImage}
+              resizeMode="contain"
+            />
+            <View style={styles.detailsContainer}>
+              <Text style={styles.productName}>{item.data.name}</Text>
+              <Text style={styles.productPrice}>
+                Price: ₹{item.data.variants[0].priceAdjustment}
+              </Text>
+              <View style={styles.attributesContainer}>
+                <Text style={styles.attributesTitle}>Attributes:</Text>
+                <Text style={styles.attributeText}>
+                  Size: {item.data.variants[0].attributes.size}
+                </Text>
+                <Text style={styles.attributeText}>
+                  Material: {item.data.variants[0].attributes.material}
+                </Text>
+                <Text style={styles.attributeText}>
+                  Quality: {item.data.variants[0].attributes.quality}
+                </Text>
+              </View>
+            </View>
+          </Pressable>
+        ) : (
+          <Text style={{ padding: 12, textAlign: "center" }}>
+            Loading Product...
+          </Text>
+        );
+      case "deals":
         return (
           <View>
-            <Text style={[styles.sectionTitle,{padding:12}]}>Deals of the Day</Text>
+            <Text style={[styles.sectionTitle, { padding: 12 }]}>
+              Hot Deals of the Day
+            </Text>
             <FlatList
               data={item.data}
               renderItem={renderDealItem}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item._id}
               horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.dealList}
             />
           </View>
         );
-      case 'footer':
-        return <Image source={{ uri: item.data }} style={styles.footerBanner} />;
+      case "footer":
+        return (
+          <Image source={{ uri: item.data }} style={styles.footerBanner} />
+        );
       default:
         return null;
     }
   };
 
-  const handleSearchPress = () => {
-    console.log('Search button pressed');
-  };
-
-
-
-
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <View style={styles.header}>
-        <Text style={styles.headerText}>Hi Shubham</Text>
+        <Text style={styles.headerText}>Hi {userName}</Text>
         <View style={styles.headerIcons}>
-          {/* <TouchableOpacity
-            style={styles.searchButton}
-            onPress={handleSearchPress}
-          >
-            <Ionicons name="search-outline" size={30} color="#6B48FF" />
-          </TouchableOpacity> */}
           <TouchableOpacity
-          onPress={()=>navigation.navigate("Cart")}
-          style={styles.cartButton}>
+            onPress={() => navigation.navigate("Cart")}
+            style={styles.cartButton}
+          >
             <Ionicons name="cart-outline" size={30} color="#6B48FF" />
             {cartCounts > 0 && (
               <View style={styles.cartBadge}>
@@ -255,6 +349,14 @@ const HomeScreen = () => {
         keyExtractor={(item) => item.type}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#6B48FF"]} // Spinner color
+            tintColor="#6B48FF" // iOS spinner color
+          />
+        }
       />
     </View>
   );

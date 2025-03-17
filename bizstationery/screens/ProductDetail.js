@@ -19,7 +19,10 @@ import styles from "../style/ProductDetailStyle";
 import Toast from "react-native-toast-message";
 
 const { width } = Dimensions.get("window");
-const BASE_URL = "http://192.168.245.3:8001";
+// const BASE_URL = "http://192.168.245.3:8001";
+import   Constant from 'expo-constants'
+const BASE_URL = Constant.expoConfig.extra.API_URL;
+console.log(BASE_URL)
 
 const ProductDetail = ({ route }) => {
   const { product: id } = route.params;
@@ -37,7 +40,7 @@ const ProductDetail = ({ route }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${BASE_URL}/product/${id}`);
+        const response = await fetch(`${BASE_URL}product/${id}`);
         const data = await response.json();
         setProduct(data.product);
         setSelectedVariant(data.product.variants ? data.product.variants[0] : null);
@@ -206,7 +209,8 @@ const ProductDetail = ({ route }) => {
               ₹{(product.price ? product.price + (selectedVariant?.priceAdjustment || 0) : selectedVariant?.priceAdjustment || 0).toFixed(2)}
             </Text>
             <Text style={[styles.stock, { color: stockStatus.color }]}>
-              {stockStatus.text}: {selectedVariant?.stock || product.stock_quantity}
+              {stockStatus.text}
+              {/* {selectedVariant?.stock || product.stock_quantity} */}
             </Text>
           </View>
 
@@ -265,7 +269,7 @@ const ProductDetail = ({ route }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.customizeButton}
-              onPress={() => navigation.navigate("ProductCustomization", { id: product.id })}
+              onPress={() => navigation.navigate("ProductCustomization", { id: product._id })}
               disabled={stockStatus.text === "Out of Stock"}
             >
               <Ionicons name="color-palette-outline" size={20} color="#fff" />
