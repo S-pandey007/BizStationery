@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,71 +8,81 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons"; // For icons
-import styles from "../style/ProceedOrderStyle";
-import AntDesign from '@expo/vector-icons/AntDesign';
-import { useNavigation } from '@react-navigation/native';
+import Icon from "react-native-vector-icons/MaterialIcons";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import { useNavigation } from "@react-navigation/native";
+import WebView from "react-native-webview";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch } from "react-redux";
+import { clearCart } from "../redux/slice/cartSlice"; // Path matches CartScreen
 import generateInvoicePDF from "../utils/generateInvoicePDF";
+import { RAZORPAY_KEY_ID} from "../constants/constants";
+import newStyles from '../style/ProceedOrderStyle'
 
+import   Constant from 'expo-constants'
+const BASE_URL = Constant.expoConfig.extra.API_URL;
+console.log(BASE_URL)
 
 const ProceedOrder = ({ route }) => {
-  
-  
   const navigation = useNavigation();
-  const billingData = route.params.billingData;
-  console.log("billingData : ", billingData);
+  const dispatch = useDispatch();
+  const billingData = route.params.billingData || [];
+  console.log("billingData:", billingData);
 
-  // Logic behind Transport expenses and transport tax
-  // Transport expenses 120 Rs/kg, weights in grams, convert to kg
-  // Transport tax 5%
+  // User data states
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [userId, setUserId] = useState("");
 
-  // Calculate total order weight in grams, then convert to kg
-  const Total_OrderWeight_InGrams = billingData.map((item) => {
-    const weightInGrams = Number(item.variant.weight || 0); // Weight in grams
-    const quantity = Number(item.quantity || 0);
-    const per_item_total_weight = weightInGrams * quantity;
-    console.log(`Item: ${item.name}, Weight (g): ${weightInGrams}, Quantity: ${quantity}, Total (g): ${per_item_total_weight}`);
-    return per_item_total_weight;
-  });
-  console.log("Total Order Weight per item (grams):", Total_OrderWeight_InGrams);
+  // Fetch user details
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem("userData");
+        if (!storedData) throw new Error("No user data in storage");
+        const parsedData = JSON.parse(storedData);
+        console.log("User data from storage:", parsedData);
 
-  const total_weight_in_grams = Total_OrderWeight_InGrams.reduce((x, y) => x + y, 0);
-  const total_weight = total_weight_in_grams / 1000; // Convert grams to kilograms
-  console.log("Total weight (kg):", total_weight);
+        setName(parsedData.name || "Unknown");
+        setEmail(parsedData.email || "");
+        setMobile(parsedData.mobile || "");
 
-  const Transport_expenses_PerKG = 120; // Rs per kg
-  const total_Transport_expenses_WithoutGST = Transport_expenses_PerKG * total_weight;
-  console.log("Without GST (Rs):", total_Transport_expenses_WithoutGST);
+        const response = await fetch(
+          `${BASE_URL}retailer/profile/${parsedData.name}/${parsedData.mobile}/${parsedData.email}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch retailer profile");
+        const data = await response.json();
+        console.log("Retailer profile:", data);
+        setUserId(data.data._id || "");
+      } catch (error) {
+        console.error("Error fetching user details:", error.message);
+        alert("Couldn’t load user details. Please log in again.");
+      }
+    };
+    fetchUserDetails();
+  }, []);
 
-  const Transport_tax_Rate = 5; // 5% GST
+  // Calculations (typo fixed)
+  const total_weight = billingData
+    .reduce((sum, item) => sum + Number(item.variant?.weight || 0) * Number(item.quantity || 0), 0) / 1000;
+  const Transport_expenses_PerKG = 120;
+  const total_Transport_expenses_WithoutGST = Transport_expenses_PerKG * total_weight; // Fixed
+  const Transport_tax_Rate = 5;
   const Transport_tax = (Transport_tax_Rate * total_Transport_expenses_WithoutGST) / 100;
-  console.log("Tax amount on transport (Rs):", Transport_tax);
-
   const final_Transport_expenses = total_Transport_expenses_WithoutGST + Transport_tax;
-  console.log("Final Transport expenses (Rs):", final_Transport_expenses);
 
-  // Product price calculation (unchanged except for numeric safety)
-  const total_Product_Base_Price_Array = billingData.map((item) => Number(item.totalWithoutGST || 0));
-  const total_Product_Base_Price = total_Product_Base_Price_Array.reduce((x, y) => x + y, 0);
-  console.log("All product Base price (Rs):", total_Product_Base_Price);
-
-  const all_Product_GST_Amount_Array = billingData.map((item) => Number(item.gst || 0));
-  const total_GST_Amount = all_Product_GST_Amount_Array.reduce((x, y) => x + y, 0);
-  console.log("Total GST Amount (Rs):", total_GST_Amount);
-
+  const total_Product_Base_Price = billingData.reduce(
+    (sum, item) => sum + Number(item.totalWithoutGST || 0),
+    0
+  );
+  const total_GST_Amount = billingData.reduce((sum, item) => sum + Number(item.gst || 0), 0);
   const total_Product_Prize_includingGST = total_Product_Base_Price + total_GST_Amount;
-  console.log("Total Product Prize including GST (Rs):", total_Product_Prize_includingGST);
-
   const total_Product_Price_includingGST_and_transport_expenses =
     total_Product_Prize_includingGST + final_Transport_expenses;
-  console.log(
-    "Total Product Price including GST and transport expenses (Rs):",
-    total_Product_Price_includingGST_and_transport_expenses
-  );
 
-  // Prepare all calculations to pass to the PDF generator
   const calculations = {
-    total_weight, // In kg
+    total_weight,
     total_Transport_expenses_WithoutGST,
     Transport_tax,
     final_Transport_expenses,
@@ -83,9 +93,11 @@ const ProceedOrder = ({ route }) => {
     Transport_tax_Rate,
   };
 
-  // State for modals and address (unchanged)
+  // States for modals and address
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const [invoiceModalVisible, setInvoiceModalVisible] = useState(false);
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState("");
   const [address, setAddress] = useState({
     shopName: "",
     addressLine1: "",
@@ -96,305 +108,317 @@ const ProceedOrder = ({ route }) => {
     country: "",
   });
 
-  // Function to trigger the PDF download (unchanged)
-  const handleDownloadInvoice = async() => {
-    console.log("generateInvoicePDF called");
+  // Payment handler (unchanged)
+  const handlePayment = async () => {
+    const requiredFields = ["shopName", "addressLine1", "city", "state", "pincode", "country"];
+    const isAddressComplete = requiredFields.every((field) => address[field].trim() !== "");
+    if (!isAddressComplete) {
+      alert("Please fill in all required address fields before proceeding.");
+      setAddressModalVisible(true);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${BASE_URL}payment/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: total_Product_Price_includingGST_and_transport_expenses * 100,
+          currency: "INR",
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.orderId) throw new Error("Failed to create payment order");
+
+      const checkoutPage = `
+        <html>
+          <body>
+            <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+            <script>
+              var options = {
+                key: "${RAZORPAY_KEY_ID}",
+                amount: ${total_Product_Price_includingGST_and_transport_expenses * 100},
+                currency: "INR",
+                order_id: "${data.orderId}",
+                name: "BizStationery",
+                description: "Order Payment",
+                handler: function (response) {
+                  window.ReactNativeWebView.postMessage(JSON.stringify(response));
+                },
+                prefill: {
+                  email: "${email || "customer@bizstationery.com"}",
+                  contact: "${mobile || "+919876543210"}",
+                  name: "${name || "Customer"}"
+                }
+              };
+              var rzp = new Razorpay(options);
+              rzp.on('payment.failed', function (response) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ error: response.error }));
+              });
+              rzp.open();
+            </script>
+          </body>
+        </html>
+      `;
+      setPaymentUrl(`data:text/html;base64,${btoa(checkoutPage)}`);
+      setPaymentModalVisible(true);
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("Oops! Couldn’t start payment: " + error.message);
+    }
+  };
+
+  // Handle WebView payment response (with cart clearing)
+  const handleWebViewMessage = async (event) => {
+    try {
+      const paymentInfo = JSON.parse(event.nativeEvent.data);
+      if (paymentInfo.error) {
+        setPaymentModalVisible(false);
+        alert("Payment failed: " + paymentInfo.error.description);
+        return;
+      }
+  
+      const verifyResponse = await fetch(`${BASE_URL}payment/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          razorpay_order_id: paymentInfo.razorpay_order_id,
+          razorpay_payment_id: paymentInfo.razorpay_payment_id,
+          razorpay_signature: paymentInfo.razorpay_signature,
+          orderData: {
+            retailer: {
+              userId: userId || "662f3b1c9d8e4f2a1c3d5e7f", // Replace with a valid ObjectId from your Retailer collection
+              name: name || "Unknown",
+              contact: { mobile: mobile || "+919876543210", email: email || "unknown@biz.com" },
+            },
+            items: billingData.map((item) => ({
+              productId: item.id, // Replace with valid Product ObjectId
+              quantity: Number(item.quantity || 1),
+              pricePerItem: Number(item.price || item.totalWithoutGST / item.quantity || 0),
+              gstRate: Number(item.gst_rate || 5), // Ensure valid enum value
+            })),
+            totalAmount: total_Product_Price_includingGST_and_transport_expenses,
+            amountBreakdown: {
+              subtotal: total_Product_Base_Price,
+              gst: total_GST_Amount,
+              shipping: final_Transport_expenses,
+            },
+            address,
+            orderStatus: "Pending", // Add explicitly
+            payment: {
+              method: "Card", // Use valid enum value (fetch from Razorpay if possible)
+            },
+          },
+        }),
+      });
+      const result = await verifyResponse.json();
+      console.log("Verify response:", result); // Debug
+      if (result.success) {
+        setPaymentModalVisible(false);
+        // alert("Yay! Payment successful! Order ID: " + result.order.orderId);
+        await generateInvoicePDF(billingData, address, {
+          ...calculations,
+          orderId: result.order.orderId,
+        });
+        dispatch(clearCart());
+        console.log("Cart cleared after successful payment");
+        navigation.navigate("Home");
+      } else {
+        alert("Payment verification failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      alert("Oops! Error saving order: " + error.message);
+    }
+  };
+
+  // Invoice download (unchanged)
+  const handleDownloadInvoice = async () => {
+    console.log("Downloading invoice...");
     await generateInvoicePDF(billingData, address, calculations);
   };
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={newStyles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <AntDesign
-          onPress={() => navigation.goBack()}
-          name="arrowleft"
-          size={24}
-          color="black"
-        />
-        <Text style={styles.headerText}>Proceed Order</Text>
+      <View style={newStyles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={newStyles.backButton}>
+          <AntDesign name="arrowleft" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={newStyles.headerText}>Checkout</Text>
       </View>
 
       {/* Address Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Shipping Address</Text>
-        <View style={styles.addressContainer}>
-          {address.shopName &&
-          address.addressLine1 &&
-          address.addressLine2 &&
-          address.city &&
-          address.state &&
-          address.pincode &&
-          address.country ? (
-            <Text
-              style={styles.addressText}
-            >{`${address.shopName}, ${address.addressLine1}, ${address.addressLine2}, ${address.city}, ${address.state}, ${address.pincode}, ${address.country}`}</Text>
+      <View style={newStyles.card}>
+        <Text style={newStyles.sectionTitle}>Delivery Address</Text>
+        <View style={newStyles.addressBox}>
+          {address.shopName && address.addressLine1 ? (
+            <Text style={newStyles.addressText}>
+              {`${address.shopName}, ${address.addressLine1}, ${address.addressLine2 || ""}, ${address.city}, ${address.state} - ${address.pincode}, ${address.country}`}
+            </Text>
           ) : (
-            <Text style={styles.placeholderText}>No address added</Text>
+            <Text style={newStyles.placeholderText}>Add your shipping address</Text>
           )}
           <TouchableOpacity
-            style={styles.editIcon}
+            style={newStyles.editButton}
             onPress={() => setAddressModalVisible(true)}
           >
-            <Icon name="edit" size={20} color="#6B48FF" />
+            <Icon name="edit" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Address Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={addressModalVisible}
-        onRequestClose={() => setAddressModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Shipping Address</Text>
+      <Modal animationType="fade" transparent={true} visible={addressModalVisible}>
+        <View style={newStyles.modalOverlay}>
+          <View style={newStyles.modalContent}>
+            <Text style={newStyles.modalTitle}>Shipping Address</Text>
             <TextInput
-              style={styles.input}
-              placeholder="Shop Name"
+              style={newStyles.input}
+              placeholder="Shop Name *"
               placeholderTextColor="#888"
               value={address.shopName}
-              onChangeText={(text) =>
-                setAddress({ ...address, shopName: text })
-              }
+              onChangeText={(text) => setAddress({ ...address, shopName: text })}
             />
             <TextInput
-              style={styles.input}
-              placeholder="Address Line 1"
+              style={newStyles.input}
+              placeholder="Address Line 1 *"
               placeholderTextColor="#888"
               value={address.addressLine1}
-              onChangeText={(text) =>
-                setAddress({ ...address, addressLine1: text })
-              }
+              onChangeText={(text) => setAddress({ ...address, addressLine1: text })}
             />
             <TextInput
-              style={styles.input}
-              placeholder="Address Line 2 (Optional)"
+              style={newStyles.input}
+              placeholder="Address Line 2"
               placeholderTextColor="#888"
               value={address.addressLine2}
-              onChangeText={(text) =>
-                setAddress({ ...address, addressLine2: text })
-              }
+              onChangeText={(text) => setAddress({ ...address, addressLine2: text })}
             />
-            <View style={styles.row}>
+            <View style={newStyles.inputRow}>
               <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="City"
+                style={[newStyles.input, newStyles.halfInput]}
+                placeholder="City *"
                 placeholderTextColor="#888"
                 value={address.city}
                 onChangeText={(text) => setAddress({ ...address, city: text })}
               />
               <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="State"
+                style={[newStyles.input, newStyles.halfInput]}
+                placeholder="State *"
                 placeholderTextColor="#888"
                 value={address.state}
                 onChangeText={(text) => setAddress({ ...address, state: text })}
               />
             </View>
-            <View style={styles.row}>
+            <View style={newStyles.inputRow}>
               <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="Postal Code"
+                style={[newStyles.input, newStyles.halfInput]}
+                placeholder="Pincode *"
                 placeholderTextColor="#888"
                 keyboardType="numeric"
                 value={address.pincode}
-                onChangeText={(text) =>
-                  setAddress({ ...address, pincode: text })
-                }
+                onChangeText={(text) => setAddress({ ...address, pincode: text })}
               />
               <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="Country"
+                style={[newStyles.input, newStyles.halfInput]}
+                placeholder="Country *"
                 placeholderTextColor="#888"
                 value={address.country}
-                onChangeText={(text) =>
-                  setAddress({ ...address, country: text })
-                }
+                onChangeText={(text) => setAddress({ ...address, country: text })}
               />
             </View>
             <TouchableOpacity
-              style={styles.saveButton}
-              onPress={() => {
-                // Simulate saving address (replace with actual logic if needed)
-                console.log("Address saved:", address);
-
-                setAddressModalVisible(false);
-              }}
-            >
-              <Text style={styles.saveButtonText}>Save Address</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.cancelButton}
+              style={newStyles.saveButton}
               onPress={() => setAddressModalVisible(false)}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={newStyles.buttonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={newStyles.cancelButton}
+              onPress={() => setAddressModalVisible(false)}
+            >
+              <Text style={newStyles.buttonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* View Invoice Button */}
-      <TouchableOpacity
-        style={styles.viewInvoiceButton}
-        onPress={() => setInvoiceModalVisible(true)}
-      >
-        <Text style={styles.viewInvoiceText}>View Invoice</Text>
-      </TouchableOpacity>
+      {/* Invoice Preview */}
+      <View style={newStyles.card}>
+        <TouchableOpacity
+          style={newStyles.previewButton}
+          onPress={() => setInvoiceModalVisible(true)}
+        >
+          <Text style={newStyles.previewText}>Preview Invoice</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Invoice Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={invoiceModalVisible}
-        onRequestClose={() => setInvoiceModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Invoice Details</Text>
-            <ScrollView showsVerticalScrollIndicator={false}>
-
-              {/* Products List */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Text
-                  style={[
-                    styles.sectionTitle,
-                    { flex: 2, textAlign: "center" },
-                  ]}
-                >
-                  Products
-                </Text>
-                <Text
-                  style={[
-                    styles.sectionTitle,
-                    { flex: 1, textAlign: "center" },
-                  ]}
-                >
-                  Price
-                </Text>
-                <Text
-                  style={[
-                    styles.sectionTitle,
-                    { flex: 1, textAlign: "center" },
-                  ]}
-                >
-                  GST Rate
-                </Text>
-              </View>
-              {billingData.map((item,index) => (
-                <ScrollView key={index} style={styles.invoiceSection} showsVerticalScrollIndicator={false}>
-                  <View style={styles.productItem}>
-                    <Text style={{ flex: 2, textAlign: "center" }}>
-                      {item.name}
+      <Modal animationType="fade" transparent={true} visible={invoiceModalVisible}>
+        <View style={newStyles.modalOverlay}>
+          <View style={newStyles.modalContent}>
+            <Text style={newStyles.modalTitle}>Invoice Details</Text>
+            <ScrollView>
+              {/* Products Table */}
+              <View style={newStyles.table}>
+                <View style={newStyles.tableHeader}>
+                  <Text style={[newStyles.tableCell, { flex: 2 }]}>Item</Text>
+                  <Text style={[newStyles.tableCell, { flex: 1 }]}>Price</Text>
+                  <Text style={[newStyles.tableCell, { flex: 1 }]}>GST</Text>
+                </View>
+                {billingData.map((item, index) => (
+                  <View key={index} style={newStyles.tableRow}>
+                    <Text style={[newStyles.tableCell, { flex: 2 }]}>{item.name}</Text>
+                    <Text style={[newStyles.tableCell, { flex: 1 }]}>
+                      ₹{Number(item.price || 0).toFixed(2)}
                     </Text>
-                    <Text style={{ flex: 1, textAlign: "center" }}>
-                      ₹{item.price}
-                    </Text>
-                    <Text style={{ flex: 1, textAlign: "center" }}>
-                      {item.gst_rate}%
-                    </Text>
+                    <Text style={[newStyles.tableCell, { flex: 1 }]}>{item.gst_rate}%</Text>
                   </View>
-                </ScrollView>
-              ))}
-
-              {/* Amount Breakdown */}
-              <ScrollView style={styles.invoiceSection} showsVerticalScrollIndicator={false}>
-                <Text style={styles.sectionTitle}>Amount Breakdown</Text>
-                <Text style={styles.sectionSubTitle}>Product Price & Tax</Text>
-                <View style={styles.breakdownRow}>
-                  <Text>All Products Base Price</Text>
-                  <Text>₹{total_Product_Base_Price}</Text>
-                </View>
-                <View style={styles.breakdownRow}>
-                  <Text>GST Amount</Text>
-                  <Text>₹{total_GST_Amount}</Text>
-                </View>
-                <View
-                  style={[
-                    styles.breakdownRow,
-                    { borderTopWidth: 1, borderBottomColor: "#E0E0E0", top: 5 },
-                  ]}
-                >
-                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                    Total Amount
-                  </Text>
-                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                    ₹{total_Product_Prize_includingGST}
-                  </Text>
-                </View>
-                {/* <View style={styles.breakdownRow}>
-                  <Text>Transport Tax (5%)</Text>
-                  <Text>$1.00</Text>
-                </View> */}
-
-                <Text style={[styles.sectionSubTitle, { top: 10 }]}>
-                  Transportation Cost & Tax
-                </Text>
-
-                <View style={styles.breakdownRow}>
-                  <Text>Total Order Weight</Text>
-                  <Text>{total_weight}Kg</Text>
-                </View>
-
-                <View style={styles.breakdownRow}>
-                  <Text>Amount Weight per Kg</Text>
-                  <Text>₹{Transport_expenses_PerKG}/Kg</Text>
-                </View>
-                <View style={styles.breakdownRow}>
-                  <Text>Transport Weight expenses</Text>
-                  <Text>₹{total_Transport_expenses_WithoutGST}</Text>
-                </View>
-
-                <View style={styles.breakdownRow}>
-                  <Text>Transport Tax</Text>
-                  <Text>{Transport_tax_Rate}%</Text>
-                </View>
-                <View style={styles.breakdownRow}>
-                  <Text>Transport Tax Amount</Text>
-                  <Text>₹{Transport_tax}</Text>
-                </View>
-
-                <View
-                  style={[
-                    styles.breakdownRow,
-                    { borderTopWidth: 1, borderBottomColor: "#E0E0E0", top: 5 },
-                  ]}
-                >
-                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                  Transport Expenses
-                  </Text>
-                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                    ₹{final_Transport_expenses}
-                  </Text>
-                </View>
-                
-              </ScrollView>
-
-              {/* Total Amount */}
-              <View style={styles.totalSection}>
-                <Text style={styles.totalLabel}>Total Amount</Text>
-                <Text style={styles.totalAmount}>₹{total_Product_Price_includingGST_and_transport_expenses}</Text>
+                ))}
               </View>
 
-              {/* Modal Buttons */}
-              <View style={styles.modalButtons}>
+              {/* Breakdown */}
+              <Text style={newStyles.sectionTitle}>Summary</Text>
+              <View style={newStyles.breakdownRow}>
+                <Text>Base Price</Text>
+                <Text>₹{total_Product_Base_Price.toFixed(2)}</Text>
+              </View>
+              <View style={newStyles.breakdownRow}>
+                <Text>GST</Text>
+                <Text>₹{total_GST_Amount.toFixed(2)}</Text>
+              </View>
+              <View style={newStyles.breakdownRow}>
+                <Text>Subtotal</Text>
+                <Text>₹{total_Product_Prize_includingGST.toFixed(2)}</Text>
+              </View>
+              <View style={newStyles.breakdownRow}>
+                <Text>Shipping (₹120/kg)</Text>
+                <Text>₹{total_Transport_expenses_WithoutGST.toFixed(2)}</Text>
+              </View>
+              <View style={newStyles.breakdownRow}>
+                <Text>Shipping Tax (5%)</Text>
+                <Text>₹{Transport_tax.toFixed(2)}</Text>
+              </View>
+              <View style={newStyles.totalRow}>
+                <Text style={newStyles.totalLabel}>Total</Text>
+                <Text style={newStyles.totalAmount}>
+                  ₹{total_Product_Price_includingGST_and_transport_expenses.toFixed(2)}
+                </Text>
+              </View>
+
+              {/* Buttons */}
+              <View style={newStyles.modalButtons}>
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.closeButton]}
+                  style={newStyles.closeButton}
                   onPress={() => setInvoiceModalVisible(false)}
                 >
-                  <Text style={styles.modalButtonText}>Close</Text>
+                  <Text style={newStyles.buttonText}>Close</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.downloadButton]}
+                  style={newStyles.downloadButton}
                   onPress={handleDownloadInvoice}
                 >
-                  <Text style={styles.modalButtonText}>Download Invoice</Text>
+                  <Text style={newStyles.buttonText}>Download</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -402,27 +426,21 @@ const ProceedOrder = ({ route }) => {
         </View>
       </Modal>
 
-      {/* Payment Methods Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Payment Methods</Text>
-        <TouchableOpacity style={styles.paymentOption}>
-          <Icon name="credit-card" size={24} color="#6B48FF" />
-          <Text style={styles.paymentText}>Credit/Debit Card</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.paymentOption}>
-          <Icon name="account-balance-wallet" size={24} color="#6B48FF" />
-          <Text style={styles.paymentText}>UPI</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.paymentOption}>
-          <Icon name="money" size={24} color="#6B48FF" />
-          <Text style={styles.paymentText}>Cash on Delivery</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Proceed Button */}
-      <TouchableOpacity style={styles.proceedButton}>
-        <Text style={styles.proceedButtonText}>Proceed to Payment</Text>
+      {/* Payment Button */}
+      <TouchableOpacity style={newStyles.paymentButton} onPress={handlePayment}>
+        <Text style={newStyles.paymentButtonText}>Pay Now</Text>
       </TouchableOpacity>
+
+      {/* WebView */}
+      <Modal visible={paymentModalVisible} animationType="slide">
+        <WebView source={{ uri: paymentUrl }} onMessage={handleWebViewMessage} style={{ flex: 1 }} />
+        <TouchableOpacity
+          style={newStyles.webViewCloseButton}
+          onPress={() => setPaymentModalVisible(false)}
+        >
+          <Text style={newStyles.buttonText}>Cancel Payment</Text>
+        </TouchableOpacity>
+      </Modal>
     </ScrollView>
   );
 };

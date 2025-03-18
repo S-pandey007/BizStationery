@@ -6,154 +6,159 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   header: {
-    backgroundColor: "#fff",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
     flexDirection: "row",
-    gap: 70,
     alignItems: "center",
+    padding: 20,
+    backgroundColor: "#6B48FF", // Solid purple
+  },
+  backButton: {
+    marginRight: 15,
   },
   headerText: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
-    color: "black",
+    color: "#fff",
   },
-  section: {
+  card: {
+    margin: 15,
     backgroundColor: "#fff",
-    padding: 20,
-    marginVertical: 10,
     borderRadius: 10,
-    marginHorizontal: 10,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 10,
   },
-  sectionSubTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 10,
-    marginTop: 8,
-  },
-  addressContainer: {
+  addressBox: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
   },
   addressText: {
-    fontSize: 16,
-    color: "#333",
+    fontSize: 14,
+    color: "#555",
+    flex: 1,
   },
   placeholderText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#888",
+    fontStyle: "italic",
   },
-  editIcon: {
-    padding: 5,
+  editButton: {
+    backgroundColor: "#6B48FF",
+    padding: 8,
+    borderRadius: 5,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContent: {
     backgroundColor: "#fff",
-    borderRadius: 10,
+    marginHorizontal: 20,
     padding: 20,
-    width: "97%",
-    maxHeight: "85%",
-    marginBottom: 20,
+    borderRadius: 10,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
+    color: "#333",
+    marginBottom: 15,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderColor: "#ddd",
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
     fontSize: 16,
+    color: "#333",
   },
-  row: {
+  inputRow: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
   halfInput: {
-    width: "48%", // Half width for two inputs in a row
+    flex: 1,
+    marginRight: 10,
   },
   saveButton: {
-    backgroundColor: "#34C759",
-    padding: 10,
+    backgroundColor: "#6B48FF",
+    padding: 12,
     borderRadius: 5,
     alignItems: "center",
     marginTop: 10,
-  },
-  saveButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
   },
   cancelButton: {
-    backgroundColor: "#FF3B30",
-    padding: 10,
+    backgroundColor: "#FF6347",
+    padding: 12,
     borderRadius: 5,
     alignItems: "center",
     marginTop: 10,
   },
-  cancelButtonText: {
+  buttonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
-  viewInvoiceButton: {
-    backgroundColor: "#6B48FF",
-    padding: 15,
+  previewButton: {
+    backgroundColor: "#32CD32", // Green for simplicity
+    padding: 12,
     borderRadius: 5,
     alignItems: "center",
-    marginVertical: 10,
-    marginHorizontal: 10,
   },
-  viewInvoiceText: {
+  previewText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
-  invoiceSection: {
-    marginBottom: 20,
+  table: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    marginBottom: 15,
   },
-  productItem: {
+  tableHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    backgroundColor: "#F0F0F0",
+    padding: 10,
+  },
+  tableRow: {
+    flexDirection: "row",
+    padding: 10,
+    borderTopWidth: 1,
+    borderColor: "#ddd",
+  },
+  tableCell: {
+    fontSize: 14,
+    color: "#333",
+    textAlign: "center",
   },
   breakdownRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 5,
   },
-  totalSection: {
-    borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-    paddingTop: 10,
-    marginTop: 10,
+  totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderColor: "#ddd",
+    marginTop: 10,
   },
   totalLabel: {
     fontSize: 18,
     fontWeight: "bold",
+    color: "#333",
   },
   totalAmount: {
     fontSize: 18,
@@ -163,49 +168,39 @@ const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
-  },
-  modalButton: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    marginHorizontal: 5,
+    marginTop: 15,
   },
   closeButton: {
-    backgroundColor: "#FF3B30",
+    backgroundColor: "#FF6347",
+    padding: 12,
+    borderRadius: 5,
+    flex: 1,
+    marginRight: 10,
+    alignItems: "center",
   },
   downloadButton: {
-    backgroundColor: "#34C759",
-  },
-  modalButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  paymentOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
-  },
-  paymentText: {
-    fontSize: 16,
-    marginLeft: 10,
-  },
-  proceedButton: {
     backgroundColor: "#6B48FF",
+    padding: 12,
+    borderRadius: 5,
+    flex: 1,
+    alignItems: "center",
+  },
+  paymentButton: {
+    margin: 15,
     padding: 15,
     borderRadius: 5,
+    backgroundColor: "#6B48FF",
     alignItems: "center",
-    marginVertical: 20,
-    marginHorizontal: 10,
   },
-  proceedButtonText: {
+  paymentButtonText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  webViewCloseButton: {
+    backgroundColor: "#FF6347",
+    padding: 15,
+    alignItems: "center",
   },
 });
 
