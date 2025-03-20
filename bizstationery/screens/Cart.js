@@ -196,7 +196,7 @@ const CartScreen = () => {
                       <Text style={styles.saveButtonText}>Save for Later</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      onPress={() => navigation.navigate("ProductCustomization", { id: item.id })}
+                      onPress={() => navigation.navigate("ProductCustomization", { id: item.id,orderId: undefined })}
                       style={styles.saveButton}
                     >
                       <Text style={styles.saveButtonText}>Customization</Text>

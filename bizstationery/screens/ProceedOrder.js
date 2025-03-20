@@ -222,6 +222,28 @@ const ProceedOrder = ({ route }) => {
         });
         dispatch(clearCart());
         console.log("Cart cleared after successful payment");
+
+        // Save invoice data
+        const invoiceResponse = await fetch(`${BASE_URL}invoice/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: userId,
+            orderId: result.order.orderId,
+            billingData,
+            address,
+            calculations,
+          }),
+        });
+      
+        if (!invoiceResponse.ok) {
+          console.error("Failed to save invoice:", await invoiceResponse.text());
+          alert("Payment successful, but invoice couldn’t be saved.");
+        }
+        console.log("invoice data saved in database ");
+        
+
+
         navigation.navigate("Home");
       } else {
         alert("Payment verification failed. Please try again.");

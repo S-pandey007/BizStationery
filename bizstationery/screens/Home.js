@@ -99,6 +99,7 @@ const HomeScreen = () => {
     { type: "footer", data: IMAGE_URL },
   ];
 
+
   const renderCategoryItem = ({ item }) => (
     <TouchableOpacity
       onPress={() =>

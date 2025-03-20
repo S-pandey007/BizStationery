@@ -12,18 +12,49 @@ import styles from "../style/LoginStyle";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../AuthProvider";
+import Constant from "expo-constants";
 
-const LoginScreen = ({ navigation }) => {
+const BASE_URL = Constant.expoConfig.extra.API_URL;
+
+// Email validation regex
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const LoginScreen = () => {
   const { login } = useContext(AuthContext);
-  const [inputType, setInputType] = useState("mobile"); // 'mobile' or 'email'
-  const [inputValue, setInputValue] = useState("");
-  const [userData, setUserData] = useState({ email: "", phone: "" });
+  const navigation = useNavigation();
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const validateEmail = (email) => {
+    return emailRegex.test(email);
+  };
+
+  const handleEmailSubmit = async () => {
+    setIsLoading(true);
     try {
-      const savedUserData = await AsyncStorage.getItem("userData");
-      const userData = savedUserData ? JSON.parse(savedUserData) : null;
+      const trimmedEmail = email.trim();
+      if (!trimmedEmail) {
+        ToastAndroid.showWithGravity(
+          "Please enter an email!",
+          ToastAndroid.LONG,
+          ToastAndroid.CENTER
+        );
+        return;
+      }
 
+      // Validate email syntax
+      if (!validateEmail(trimmedEmail)) {
+        ToastAndroid.showWithGravity(
+          "Please enter a valid email address!",
+          ToastAndroid.LONG,
+          ToastAndroid.CENTER
+        );
+        return;
+      }
+
+      const savedUserData = await AsyncStorage.getItem("userData");
       if (!savedUserData) {
         ToastAndroid.showWithGravity(
           "No user data found! Please register first.",
@@ -36,85 +67,95 @@ const LoginScreen = ({ navigation }) => {
       const parsedData = JSON.parse(savedUserData);
       console.log("User data retrieved from AsyncStorage:", parsedData);
 
-      // Ensure trimmed input for accurate matching
-      const trimmedInput = inputValue.trim();
       const storedEmail = parsedData?.email?.trim();
-      const storedPhone = parsedData?.phone?.trim();
-
-      // console.log(`(DEBUG) Mobile input: "${trimmedInput}"`);
-      // console.log(`(DEBUG) Mobile stored: "${storedPhone}"`);
-      // console.log(`(DEBUG) Length input: ${trimmedInput.length}, Length stored: ${storedPhone.length}`);
-
-      // console.log(`(DEBUG) Input split:`, trimmedInput.split(''));
-      // console.log(`(DEBUG) Stored split:`, storedPhone.split(''));
-
-      if (
-        userData &&
-        (inputValue === storedEmail || inputValue === storedPhone)
-      ) {
-        login(userData); // Update global auth state
-        ToastAndroid.show("Logged In!", ToastAndroid.LONG);
-        navigation.navigate("Home");
-      } else {
-        ToastAndroid.show("Invalid credentials!", ToastAndroid.LONG);
+      if (trimmedEmail !== storedEmail) {
+        console.log("Email not matched");
+        ToastAndroid.showWithGravity(
+          "Email not found in storage!",
+          ToastAndroid.LONG,
+          ToastAndroid.CENTER
+        );
+        return;
       }
 
-      if (inputType === "email") {
-        if (trimmedInput === storedEmail) {
-          console.log("Email matched");
-          setInputValue("");
-          ToastAndroid.showWithGravity(
-            "Logged In!",
-            ToastAndroid.LONG,
-            ToastAndroid.CENTER
-          );
-          navigation.navigate("Home");
-        } else {
-          console.log("Email not matched");
-          ToastAndroid.showWithGravity(
-            "Incorrect credentials!",
-            ToastAndroid.LONG,
-            ToastAndroid.CENTER
-          );
-        }
-      } else if (inputType === "mobile") {
-        if (trimmedInput === storedPhone) {
-          console.log("Mobile matched");
-          setInputValue("");
-          ToastAndroid.showWithGravity(
-            "Logged In!",
-            ToastAndroid.LONG,
-            ToastAndroid.CENTER
-          );
-          navigation.navigate("Home");
-        } else {
-          console.log("Mobile not matched");
-          console.log(
-            `(DEBUG) ASCII Input: ${trimmedInput
-              .split("")
-              .map((c) => c.charCodeAt(0))}`
-          );
-          console.log(
-            `(DEBUG) ASCII Stored: ${storedPhone
-              .split("")
-              .map((c) => c.charCodeAt(0))}`
-          );
-          ToastAndroid.showWithGravity(
-            "Incorrect credentials!",
-            ToastAndroid.LONG,
-            ToastAndroid.CENTER
-          );
-        }
-      } else {
-        console.log("Invalid input");
+      // Send OTP request to backend
+      const response = await fetch(`${BASE_URL}user/sendotp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send OTP");
       }
-    } catch (error) {
-      console.error("Error retrieving user data:", error);
+
+      console.log("OTP sent:", data);
+      setShowOtpInput(true);
       ToastAndroid.showWithGravity(
-        "Error logging in!",
+        "Enter the OTP sent to your email!",
         ToastAndroid.LONG,
         ToastAndroid.CENTER
       );
+    } catch (error) {
+      console.error("Error sending OTP:", error.message);
+      ToastAndroid.showWithGravity(
+        `Error: ${error.message}`,
+        ToastAndroid.LONG,
+        ToastAndroid.CENTER
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async () => {
+    setIsLoading(true);
+    try {
+      const trimmedOtp = otp.trim();
+      if (!trimmedOtp) {
+        ToastAndroid.showWithGravity(
+          "Please enter the OTP!",
+          ToastAndroid.LONG,
+          ToastAndroid.CENTER
+        );
+        return;
+      }
+
+      // Verify OTP with backend
+      const response = await fetch(`${BASE_URL}user/verifyotp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), otp: trimmedOtp }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.result) {
+        throw new Error(data.message || "Invalid OTP");
+      }
+
+      const savedUserData = await AsyncStorage.getItem("userData");
+      const userData = JSON.parse(savedUserData);
+
+      login(userData); // Update global auth state
+      setEmail("");
+      setOtp("");
+      setShowOtpInput(false);
+      ToastAndroid.showWithGravity(
+        "Logged In!",
+        ToastAndroid.LONG,
+        ToastAndroid.CENTER
+      );
+      navigation.navigate("Home");
+    } catch (error) {
+      console.error("Error verifying OTP:", error.message);
+      ToastAndroid.showWithGravity(
+        `Error: ${error.message}`,
+        ToastAndroid.LONG,
+        ToastAndroid.CENTER
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -126,59 +167,56 @@ const LoginScreen = ({ navigation }) => {
       <View style={styles.background}>
         <Text style={styles.title}>Login</Text>
 
-        {/* Toggle between Mobile and Email */}
-        <View style={styles.toggleContainer}>
-          <TouchableOpacity
-            style={[
-              styles.toggleButton,
-              inputType === "mobile" && styles.toggleButtonActive,
-            ]}
-            onPress={() => setInputType("mobile")}
-          >
-            <Text
-              style={[
-                styles.toggleText,
-                inputType === "mobile" && styles.toggleTextActive,
-              ]}
-            >
-              Mobile Number
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.toggleButton,
-              inputType === "email" && styles.toggleButtonActive,
-            ]}
-            onPress={() => setInputType("email")}
-          >
-            <Text
-              style={[
-                styles.toggleText,
-                inputType === "email" && styles.toggleTextActive,
-              ]}
-            >
-              Email
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {!showOtpInput ? (
+          <>
+            {/* Email Input */}
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Email"
+              placeholderTextColor="#888"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+              editable={!isLoading}
+            />
 
-        {/* Input Field */}
-        <TextInput
-          style={styles.input}
-          placeholder={
-            inputType === "mobile" ? "Enter Mobile Number" : "Enter Email"
-          }
-          placeholderTextColor="#888"
-          keyboardType={inputType === "mobile" ? "numeric" : "email-address"}
-          maxLength={inputType === "mobile" ? 10 : undefined}
-          value={inputValue}
-          onChangeText={setInputValue}
-        />
+            {/* Submit Email Button */}
+            <TouchableOpacity
+              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+              onPress={handleEmailSubmit}
+              disabled={isLoading}
+            >
+              <Text style={styles.buttonText}>
+                {isLoading ? "Sending OTP..." : "Submit Email"}
+              </Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            {/* OTP Input */}
+            <TextInput
+              style={styles.input}
+              placeholder="Enter OTP"
+              placeholderTextColor="#888"
+              keyboardType="numeric"
+              maxLength={6}
+              value={otp}
+              onChangeText={setOtp}
+              editable={!isLoading}
+            />
 
-        {/* Login Button */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
+            {/* Submit OTP Button */}
+            <TouchableOpacity
+              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+              onPress={handleOtpSubmit}
+              disabled={isLoading}
+            >
+              <Text style={styles.buttonText}>
+                {isLoading ? "Verifying..." : "Verify OTP"}
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </KeyboardAvoidingView>
   );

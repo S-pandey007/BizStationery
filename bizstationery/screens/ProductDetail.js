@@ -269,7 +269,7 @@ const ProductDetail = ({ route }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.customizeButton}
-              onPress={() => navigation.navigate("ProductCustomization", { id: product._id })}
+              onPress={() => navigation.navigate("ProductCustomization", { id: product._id ,orderId: undefined})}
               disabled={stockStatus.text === "Out of Stock"}
             >
               <Ionicons name="color-palette-outline" size={20} color="#fff" />

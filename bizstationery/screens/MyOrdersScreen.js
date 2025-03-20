@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,52 +9,26 @@ import {
   Modal,
   Alert,
   ScrollView,
+  ToastAndroid,
+  Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Print from "expo-print";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useNavigation } from "@react-navigation/native";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constant from "expo-constants";
 import styles from "../style/MyOrdersStyle";
-const MyOrdersScreen = () => {
-    const navigation = useNavigation()
-  // Hardcoded orders data with additional fields (payment status, product category)
-  const initialOrders = [
-    {
-      id: "1",
-      date: "2025-02-23",
-      total: 1500,
-      status: "Delivered",
-      paymentStatus: "Paid",
-      category: "Electronics",
-      items: [
-        { name: "Ceiling Fan Winding Machine", quantity: 1, price: 1200 },
-        { name: "Stator Coil", quantity: 2, price: 150 },
-      ],
-    },
-    {
-      id: "2",
-      date: "2025-02-15",
-      total: 800,
-      status: "Pending",
-      paymentStatus: "Unpaid",
-      category: "Electronics",
-      items: [{ name: "Electric Motor", quantity: 1, price: 800 }],
-    },
-    {
-      id: "3",
-      date: "2025-01-10",
-      total: 2000,
-      status: "Shipped",
-      paymentStatus: "Partially Paid",
-      category: "Home Appliances",
-      items: [{ name: "LED Bulb Pack", quantity: 5, price: 400 }],
-    },
-  ];
+import generateInvoicePDF from "../utils/generateInvoicePDF";
 
-  // State for orders, modal visibility, filter modal, and filters
-  const [orders, setOrders] = useState(initialOrders);
+const BASE_URL = Constant.expoConfig.extra.API_URL;
+console.log(BASE_URL);
+
+const MyOrdersScreen = () => {
+  const navigation = useNavigation();
+
+  const [orders, setOrders] = useState();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -62,106 +36,225 @@ const MyOrdersScreen = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [userId, setUserId] = useState(null);
+  const [orderId, setOrderId] = useState(null);
 
-  // Filter orders based on all criteria
-  const applyFilters = () => {
-    let filtered = [...initialOrders];
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState(null);
 
-    // Date Filter
-    const now = new Date();
-    if (dateFilter === "Last 7 Days") {
-      filtered = filtered.filter((order) => {
-        const orderDate = new Date(order.date);
-        const diffDays = (now - orderDate) / (1000 * 60 * 60 * 24);
-        return diffDays <= 7;
+  useEffect(() => {
+    fetchCurrentUser();
+  }, []);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const storedData = await AsyncStorage.getItem("userData");
+      if (!storedData) throw new Error("No user data in storage");
+
+      const parsedData = JSON.parse(storedData);
+      console.log("User data from storage:", parsedData);
+      console.log("user id : ", parsedData.id);
+      setUserId(parsedData.id);
+
+      const response = await fetch(`${BASE_URL}order?userId=${parsedData.id}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
       });
-    } else if (dateFilter === "Last 30 Days") {
-      filtered = filtered.filter((order) => {
-        const orderDate = new Date(order.date);
-        const diffDays = (now - orderDate) / (1000 * 60 * 60 * 24);
-        return diffDays <= 30;
-      });
-    }
 
-    // Status Filter
-    if (statusFilter !== "All") {
-      filtered = filtered.filter((order) => order.status === statusFilter);
-    }
+      if (!response.ok) throw new Error("Failed to fetch retailer profile");
 
-    // Payment Status Filter
-    if (paymentStatusFilter !== "All") {
-      filtered = filtered.filter((order) => order.paymentStatus === paymentStatusFilter);
+      const data = await response.json();
+      console.log("Retailer order data:", data.orders[0]);
+      setOrders(
+        data.orders.map((order) => ({
+          ...order,
+          id: order._id,
+          total: order.totalAmount,
+          status: order.orderStatus,
+          paymentStatus: order.payment.status,
+          date: order.timestamps.orderDate,
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching user details:", error.message);
+      alert("Couldn’t load user details. Please log in again.");
     }
-
-    // Product Category Filter
-    if (categoryFilter !== "All") {
-      filtered = filtered.filter((order) => order.category === categoryFilter);
-    }
-
-    setOrders(filtered);
-    setFilterModalVisible(false); // Close modal after applying
   };
 
-  // Reset filters
+  const fetchFilteredOrders = async (filterParams = {}) => {
+    try {
+      if (!userId) {
+        alert("User not loaded yet!");
+        return;
+      }
+
+      const query = new URLSearchParams({ userId, ...filterParams }).toString();
+      console.log("filter query ", query);
+
+      const response = await fetch(`${BASE_URL}order/filter?${query}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch filtered orders");
+
+      const data = await response.json();
+      setOrders(
+        data.orders.map((order) => ({
+          ...order,
+          id: order._id,
+          total: order.totalAmount,
+          status: order.orderStatus,
+          paymentStatus: order.payment.status,
+          date: order.timestamps.orderDate,
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching filtered orders:", error.message);
+      alert("Couldn’t load filtered orders: " + error.message);
+    }
+  };
+
+  const applyFilters = () => {
+    if (
+      dateFilter === "All" &&
+      statusFilter === "All" &&
+      paymentStatusFilter === "All" &&
+      categoryFilter === "All"
+    ) {
+      fetchCurrentUser();
+    } else {
+      const filterParams = {};
+      if (dateFilter !== "All") filterParams.dateRange = dateFilter;
+      if (statusFilter !== "All") filterParams.status = statusFilter;
+      if (paymentStatusFilter !== "All")
+        filterParams.paymentStatus = paymentStatusFilter;
+      // Category filter not implemented yet—will add in next step
+      fetchFilteredOrders(filterParams);
+    }
+    setFilterModalVisible(false);
+  };
+
   const resetFilters = () => {
     setDateFilter("All");
     setStatusFilter("All");
     setPaymentStatusFilter("All");
     setCategoryFilter("All");
-    setOrders(initialOrders);
-    setFilterModalVisible(false); // Close modal after resetting
+    fetchCurrentUser();
+    setFilterModalVisible(false);
   };
 
-  // Generate and download PDF invoice
   const generatePDF = async (order) => {
+    const orderId = order.orderId;
+    console.log(`Generating PDF for order ${orderId}`);
+    console.log(`Generating PDF for order ${userId}`);
+
     try {
-      const html = `
-        <h1>Order Invoice</h1>
-        <p>Order ID: ${order.id}</p>
-        <p>Date: ${order.date}</p>
-        <p>Status: ${order.status}</p>
-        <p>Payment Status: ${order.paymentStatus}</p>
-        <p>Category: ${order.category}</p>
-        <h2>Items:</h2>
-        <ul>
-          ${order.items.map((item) => `<li>${item.name} - Qty: ${item.quantity} - ₹${item.price}</li>`).join("")}
-        </ul>
-        <p>Total: ₹${order.total}</p>
-      `;
-      const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri);
-      Alert.alert("Success", "PDF generated and shared!");
+      const response = await fetch(
+        `${BASE_URL}invoice/?userId=${userId}&orderId=${order.orderId}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch invoice");
+      }
+
+      const data = await response.json();
+      const { billingData, address, calculations } = data.invoice;
+
+      await generateInvoicePDF(billingData, address, {
+        ...calculations,
+        orderId,
+      });
+      alert("Invoice regenerated successfully!");
     } catch (error) {
-      Alert.alert("Error", "Failed to generate PDF: " + error.message);
+      console.error("Regeneration error:", error);
+      alert("Couldn’t regenerate invoice: " + error.message);
     }
   };
 
-  const renderOrder = ({ item }) => (
-    <TouchableOpacity
-      style={styles.orderCard}
-      onPress={() => {
-        setSelectedOrder(item);
-        setModalVisible(true);
-      }}
-    >
-      <View style={styles.orderHeader}>
-        <Text style={styles.orderId}>Order #{item.id}</Text>
-        <Text style={styles.orderDate}>{item.date}</Text>
-      </View>
-      <Text style={styles.orderTotal}>Total: ₹{item.total}</Text>
-      <Text style={[styles.orderStatus, { color: item.status === "Delivered" ? "#4CAF50" : item.status === "Pending" ? "#FF9800" : "#2196F3" }]}>
-        Status: {item.status}
-      </Text>
-    </TouchableOpacity>
-  );
+  const renderOrder = ({ item, index }) => {
+    return (
+      <TouchableOpacity
+        key={index}
+        style={styles.orderCard}
+        onPress={() => {
+          setSelectedOrder(item);
+          setModalVisible(true);
+          setOrderId(item.orderId);
+        }}
+      >
+        <View style={styles.orderHeader}>
+          <Text style={styles.orderId}>Order ID: {item.orderId}</Text>
+          <Text style={styles.orderDate}>
+            {item.timestamps?.orderDate?.split("T")[0]}
+          </Text>
+        </View>
+        <Text style={styles.orderTotal}>Total: ₹{item.totalAmount}</Text>
+        <Text
+          style={[
+            styles.orderStatus,
+            {
+              color:
+                item.orderStatus === "Delivered"
+                  ? "#4CAF50"
+                  : item.orderStatus === "Pending"
+                  ? "#FF9800"
+                  : "#2196F3",
+            },
+          ]}
+        >
+          Status: {item.orderStatus}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
+  const handleCancelOrder = async () => {
+    console.log("userID", userId);
+    console.log("orderToCancel", orderId);
+
+    try {
+      const response = await fetch(`${BASE_URL}order/cancel`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userId,
+          orderId: orderId,
+        }),
+      });
+      const result = await response.json();
+      console.log("cancellation result : ", result);
+      if (result.success === true || result.success === "true") {
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.orderId === orderToCancel.orderId
+              ? {
+                  ...order,
+                  orderStatus: "Cancelled",
+                  payment: { ...order.payment, status: "Refunded" },
+                }
+              : order
+          )
+        );
+        alert(result.message);
+        // ToastAndroid("Order cancel successfully")
+        ToastAndroid.show("Order cancel successfully", ToastAndroid.SHORT);
+      }
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+    setCancelModalVisible(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Orders</Text>
         <TouchableOpacity onPress={() => setFilterModalVisible(true)}>
@@ -169,8 +262,7 @@ const MyOrdersScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Conditionally render order list or empty state */}
-      {orders.length === 0 ? (
+      {orders?.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="cart-outline" size={80} color="#A0A0A0" />
           <Text style={styles.emptyText}>No orders available.</Text>
@@ -185,7 +277,6 @@ const MyOrdersScreen = () => {
         />
       )}
 
-      {/* Order Details Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -196,35 +287,119 @@ const MyOrdersScreen = () => {
               </TouchableOpacity>
             </View>
             {selectedOrder && (
-              <ScrollView style={styles.modalBody}>
-                <Text style={styles.modalDetail}>Order ID: {selectedOrder.id}</Text>
-                <Text style={styles.modalDetail}>Date: {selectedOrder.date}</Text>
-                <Text style={styles.modalDetail}>Status: {selectedOrder.status}</Text>
-                <Text style={styles.modalDetail}>Payment Status: {selectedOrder.paymentStatus}</Text>
-                <Text style={styles.modalDetail}>Category: {selectedOrder.category}</Text>
-                <Text style={styles.modalSectionTitle}>Items:</Text>
-                {selectedOrder.items.map((item, index) => (
-                  <View key={index} style={styles.modalItem}>
-                    <Text style={styles.modalItemText}>{item.name}</Text>
-                    <Text style={styles.modalItemText}>Qty: {item.quantity}</Text>
-                    <Text style={styles.modalItemText}>₹{item.price}</Text>
+              <View style={styles.modalBody}>
+                <Text style={styles.modalDetail}>
+                  Order ID: {selectedOrder.orderId}
+                </Text>
+                <Text style={styles.modalDetail}>
+                  Date: {selectedOrder.timestamps.orderDate.split("T")[0]}
+                </Text>
+                <Text style={styles.modalDetail}>
+                  Status: {selectedOrder.orderStatus}
+                </Text>
+                <Text style={styles.modalDetail}>
+                  Payment Status: {selectedOrder.payment.status}
+                </Text>
+
+                {/* items table  */}
+                <Text style={styles.modalSectionTitle}>Items</Text>
+                <View style={styles.tableContainer}>
+                  <View style={styles.tableHeader}>
+                    <Text style={[styles.tableHeaderText, { flex: 2 }]}>
+                      Item Name
+                    </Text>
+                    <Text style={[styles.tableHeaderText, { flex: 1 }]}>
+                      Price
+                    </Text>
+                    <Text style={[styles.tableHeaderText, { flex: 1 }]}>
+                      Action
+                    </Text>
                   </View>
-                ))}
+
+                  <FlatList
+                    data={selectedOrder.items}
+                    keyExtractor={(item, index) => index.toString()}
+                    renderItem={({ item }) => (
+                      <View style={styles.tableRow}>
+                        <Pressable
+                        onPress={()=>{
+                          setModalVisible(false);
+                          setSelectedOrder(null);
+                          navigation.navigate("ProductDetail", { product: item.productId })
+                        }
+                        }
+                        style={[styles.tableCell, { flex: 1 }]}
+                        >
+                          <Text
+                          style={{padding:4}}
+                          >{item.productId || "Unknown Product"}</Text></Pressable>
+                        <Text style={[styles.tableCell, { flex: 1 }]}>
+                          ₹{item.pricePerItem || "N/A"}
+                        </Text>
+
+                        <TouchableOpacity
+                          style={styles.customizeButton}
+                          onPress={() =>
+                          {
+                            setModalVisible(false);
+                          setSelectedOrder(null);
+                            navigation.navigate(
+                              "ProductCustomization",
+                              {
+                                productId:
+                                  item.productId || item.productId,
+                                orderId: selectedOrder.orderId,
+                              }
+                            )
+                          }
+                          }
+                        >
+                          <Ionicons
+                            name="create-outline"
+                            size={16}
+                            color="#FFF"
+                          />
+                          <Text style={styles.customizeButtonText}>
+                            Customize
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  />
+                </View>
+
                 <TouchableOpacity
                   style={styles.downloadButton}
                   onPress={() => generatePDF(selectedOrder)}
                 >
                   <Ionicons name="download-outline" size={20} color="#FFFFFF" />
-                  <Text style={styles.downloadButtonText}>Download Invoice as PDF</Text>
+                  <Text style={styles.downloadButtonText}>
+                    Download Invoice as PDF
+                  </Text>
                 </TouchableOpacity>
-              </ScrollView>
+
+                {selectedOrder.orderStatus === "Pending" && (
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => {
+                      setOrderToCancel(selectedOrder);
+                      setCancelModalVisible(true);
+                    }}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel Order</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             )}
           </View>
         </View>
       </Modal>
 
-      {/* Filter Modal */}
-      <Modal visible={filterModalVisible} animationType="slide" transparent={true}>
+      <Modal
+        visible={filterModalVisible}
+        animationType="slide"
+        transparent={true}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -234,129 +409,258 @@ const MyOrdersScreen = () => {
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody}>
-              {/* Date Filter */}
               <View style={styles.filterSection}>
                 <Text style={styles.filterSectionTitle}>Date</Text>
                 <View style={styles.filterButtons}>
                   <TouchableOpacity
-                    style={[styles.filterButton, dateFilter === "All" && styles.filterButtonActive]}
+                    style={[
+                      styles.filterButton,
+                      dateFilter === "All" && styles.filterButtonActive,
+                    ]}
                     onPress={() => setDateFilter("All")}
                   >
-                    <Text style={[styles.filterButtonText, dateFilter === "All" && styles.filterButtonTextActive]}>All</Text>
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        dateFilter === "All" && styles.filterButtonTextActive,
+                      ]}
+                    >
+                      All
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.filterButton, dateFilter === "Last 7 Days" && styles.filterButtonActive]}
+                    style={[
+                      styles.filterButton,
+                      dateFilter === "Today" && styles.filterButtonActive,
+                    ]}
+                    onPress={() => setDateFilter("Today")}
+                  >
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        dateFilter === "Today" && styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Today
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.filterButton,
+                      dateFilter === "Last 7 Days" && styles.filterButtonActive,
+                    ]}
                     onPress={() => setDateFilter("Last 7 Days")}
                   >
-                    <Text style={[styles.filterButtonText, dateFilter === "Last 7 Days" && styles.filterButtonTextActive]}>Last 7 Days</Text>
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        dateFilter === "Last 7 Days" &&
+                          styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Last 7 Days
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.filterButton, dateFilter === "Last 30 Days" && styles.filterButtonActive]}
+                    style={[
+                      styles.filterButton,
+                      dateFilter === "Last 30 Days" &&
+                        styles.filterButtonActive,
+                    ]}
                     onPress={() => setDateFilter("Last 30 Days")}
                   >
-                    <Text style={[styles.filterButtonText, dateFilter === "Last 30 Days" && styles.filterButtonTextActive]}>Last 30 Days</Text>
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        dateFilter === "Last 30 Days" &&
+                          styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Last 30 Days
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
 
-              {/* Status Filter */}
               <View style={styles.filterSection}>
                 <Text style={styles.filterSectionTitle}>Status</Text>
                 <View style={styles.filterButtons}>
                   <TouchableOpacity
-                    style={[styles.filterButton, statusFilter === "All" && styles.filterButtonActive]}
+                    style={[
+                      styles.filterButton,
+                      statusFilter === "All" && styles.filterButtonActive,
+                    ]}
                     onPress={() => setStatusFilter("All")}
                   >
-                    <Text style={[styles.filterButtonText, statusFilter === "All" && styles.filterButtonTextActive]}>All</Text>
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        statusFilter === "All" && styles.filterButtonTextActive,
+                      ]}
+                    >
+                      All
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.filterButton, statusFilter === "Pending" && styles.filterButtonActive]}
+                    style={[
+                      styles.filterButton,
+                      statusFilter === "Pending" && styles.filterButtonActive,
+                    ]}
                     onPress={() => setStatusFilter("Pending")}
                   >
-                    <Text style={[styles.filterButtonText, statusFilter === "Pending" && styles.filterButtonTextActive]}>Pending</Text>
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        statusFilter === "Pending" &&
+                          styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Pending
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.filterButton, statusFilter === "Shipped" && styles.filterButtonActive]}
+                    style={[
+                      styles.filterButton,
+                      statusFilter === "Shipped" && styles.filterButtonActive,
+                    ]}
                     onPress={() => setStatusFilter("Shipped")}
                   >
-                    <Text style={[styles.filterButtonText, statusFilter === "Shipped" && styles.filterButtonTextActive]}>Shipped</Text>
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        statusFilter === "Shipped" &&
+                          styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Shipped
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.filterButton, statusFilter === "Delivered" && styles.filterButtonActive]}
+                    style={[
+                      styles.filterButton,
+                      statusFilter === "Delivered" && styles.filterButtonActive,
+                    ]}
                     onPress={() => setStatusFilter("Delivered")}
                   >
-                    <Text style={[styles.filterButtonText, statusFilter === "Delivered" && styles.filterButtonTextActive]}>Delivered</Text>
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        statusFilter === "Delivered" &&
+                          styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Delivered
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.filterButton,
+                      statusFilter === "Cancel" && styles.filterButtonActive,
+                    ]}
+                    onPress={() => setStatusFilter("Cancel")}
+                  >
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        statusFilter === "Cancel" &&
+                          styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Canceled
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
 
-              {/* Payment Status Filter */}
               <View style={styles.filterSection}>
                 <Text style={styles.filterSectionTitle}>Payment Status</Text>
                 <View style={styles.filterButtons}>
                   <TouchableOpacity
-                    style={[styles.filterButton, paymentStatusFilter === "All" && styles.filterButtonActive]}
+                    style={[
+                      styles.filterButton,
+                      paymentStatusFilter === "All" &&
+                        styles.filterButtonActive,
+                    ]}
                     onPress={() => setPaymentStatusFilter("All")}
                   >
-                    <Text style={[styles.filterButtonText, paymentStatusFilter === "All" && styles.filterButtonTextActive]}>All</Text>
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        paymentStatusFilter === "All" &&
+                          styles.filterButtonTextActive,
+                      ]}
+                    >
+                      All
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.filterButton, paymentStatusFilter === "Paid" && styles.filterButtonActive]}
-                    onPress={() => setPaymentStatusFilter("Paid")}
+                    style={[
+                      styles.filterButton,
+                      paymentStatusFilter === "Success" &&
+                        styles.filterButtonActive,
+                    ]}
+                    onPress={() => setPaymentStatusFilter("Success")}
                   >
-                    <Text style={[styles.filterButtonText, paymentStatusFilter === "Paid" && styles.filterButtonTextActive]}>Paid</Text>
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        paymentStatusFilter === "Success" &&
+                          styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Paid
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.filterButton, paymentStatusFilter === "Unpaid" && styles.filterButtonActive]}
+                    style={[
+                      styles.filterButton,
+                      paymentStatusFilter === "Unpaid" &&
+                        styles.filterButtonActive,
+                    ]}
                     onPress={() => setPaymentStatusFilter("Unpaid")}
                   >
-                    <Text style={[styles.filterButtonText, paymentStatusFilter === "Unpaid" && styles.filterButtonTextActive]}>Unpaid</Text>
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        paymentStatusFilter === "Unpaid" &&
+                          styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Unpaid
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.filterButton, paymentStatusFilter === "Partially Paid" && styles.filterButtonActive]}
-                    onPress={() => setPaymentStatusFilter("Partially Paid")}
+                    style={[
+                      styles.filterButton,
+                      paymentStatusFilter === "Refunded" &&
+                        styles.filterButtonActive,
+                    ]}
+                    onPress={() => setPaymentStatusFilter("Refunded")}
                   >
-                    <Text style={[styles.filterButtonText, paymentStatusFilter === "Partially Paid" && styles.filterButtonTextActive]}>Partially Paid</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Product Category Filter */}
-              <View style={styles.filterSection}>
-                <Text style={styles.filterSectionTitle}>Product Category</Text>
-                <View style={styles.filterButtons}>
-                  <TouchableOpacity
-                    style={[styles.filterButton, categoryFilter === "All" && styles.filterButtonActive]}
-                    onPress={() => setCategoryFilter("All")}
-                  >
-                    <Text style={[styles.filterButtonText, categoryFilter === "All" && styles.filterButtonTextActive]}>All</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.filterButton, categoryFilter === "Electronics" && styles.filterButtonActive]}
-                    onPress={() => setCategoryFilter("Electronics")}
-                  >
-                    <Text style={[styles.filterButtonText, categoryFilter === "Electronics" && styles.filterButtonTextActive]}>Electronics</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.filterButton, categoryFilter === "Clothing" && styles.filterButtonActive]}
-                    onPress={() => setCategoryFilter("Clothing")}
-                  >
-                    <Text style={[styles.filterButtonText, categoryFilter === "Clothing" && styles.filterButtonTextActive]}>Clothing</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.filterButton, categoryFilter === "Home Appliances" && styles.filterButtonActive]}
-                    onPress={() => setCategoryFilter("Home Appliances")}
-                  >
-                    <Text style={[styles.filterButtonText, categoryFilter === "Home Appliances" && styles.filterButtonTextActive]}>Home Appliances</Text>
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        paymentStatusFilter === "Refunded" &&
+                          styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Refunded
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
 
               <View style={styles.filterActions}>
-                <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
+                <TouchableOpacity
+                  style={styles.applyButton}
+                  onPress={applyFilters}
+                >
                   <Text style={styles.applyButtonText}>Apply Filters</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
+                <TouchableOpacity
+                  style={styles.resetButton}
+                  onPress={resetFilters}
+                >
                   <Text style={styles.resetButtonText}>Reset</Text>
                 </TouchableOpacity>
               </View>
@@ -364,7 +668,59 @@ const MyOrdersScreen = () => {
           </View>
         </View>
       </Modal>
-      
+
+      <Modal
+        visible={cancelModalVisible}
+        animationType="slide"
+        transparent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, {}]}>
+            <Text
+              style={[styles.modalTitle, { textAlign: "center", margin: 7 }]}
+            >
+              Cancel Order
+            </Text>
+
+            <ScrollView style={styles.modalBody}>
+              <Text
+                style={[
+                  styles.modalDetail,
+                  { fontWeight: "bold", marginBottom: 5 },
+                ]}
+              >
+                Cancellation Policy
+              </Text>
+              <Text style={[styles.modalDetail, { color: "#333" }]}>
+                - Orders can be canceled within 24 hours of placement or before
+                shipping, whichever comes first.
+              </Text>
+              <Text style={[styles.modalDetail, { color: "#333" }]}>
+                - Refunds will be credited to your original payment method
+                within 5-7 business days after approval.
+              </Text>
+
+              <View style={[styles.filterActions]}>
+                <TouchableOpacity
+                  onPress={handleCancelOrder}
+                  style={styles.applyButton}
+                >
+                  <Text style={styles.applyButtonText}>
+                    Confirm Cancellation
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.resetButton}
+                  onPress={() => setCancelModalVisible(false)}
+                >
+                  <Text style={styles.resetButtonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

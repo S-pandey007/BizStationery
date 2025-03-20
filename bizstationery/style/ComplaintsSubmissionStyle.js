@@ -1,9 +1,10 @@
 import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6FA" },
+  container: { flex: 1, backgroundColor: "#fff" },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems:'center',
     padding: 16,
     backgroundColor: "#FFF",
     borderBottomWidth: 1,
@@ -81,5 +82,69 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   submitButtonText: { fontSize: 16, color: "#FFF", fontWeight: "600" },
+  typeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    marginVertical: 5,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 5,
+  },
+  typeButtonText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: "#333",
+  },
+  picker: {
+    height: 50,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  nextButton: {
+    backgroundColor: "#6B48FF",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  noteText: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 10,
+  },
+  backButton: {
+    backgroundColor: "#FF4D4D",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  imageSliderContainer: {
+    marginVertical: 10,
+    alignItems: "center",
+  },
+  sliderImage: {
+    width: 300, // Increased width
+    height: 300, // Increased height
+    resizeMode: "cover", // Ensures image fits without distortion
+    borderRadius: 10, // Optional: Adds rounded corners
+  },
+  imageSlider: {
+    flexGrow: 0, // Prevents unnecessary stretching
+  },
+  pagination: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 5,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#6B48FF", // Match your theme
+    marginHorizontal: 4,
+  },
 });
   export default styles;

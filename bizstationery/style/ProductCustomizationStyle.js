@@ -138,6 +138,22 @@ const styles = StyleSheet.create({
     color: '#333',
     marginLeft: 8,
   },
+  
+  errorText: {
+  color: '#FF4D4D',
+  fontSize: 15,
+  padding:6,
+  marginTop:'-2%'
+},
+successText: {
+  color: '#4CAF50', // Green for success
+  fontSize: 15,
+  padding:6,
+  marginTop:'-2%'
+},
+sendButtonDisabled: {
+  backgroundColor: '#A0A0A0', // Gray when disabled
+},
 });
 
 export default styles;

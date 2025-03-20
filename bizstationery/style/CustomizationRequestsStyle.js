@@ -7,14 +7,14 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E0E0E0",
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "700",
     color: "#1A1A1A",
   },
@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
   statusContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom:10
   },
   requestStatus: {
     fontSize: 14,
@@ -81,12 +82,14 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
+    
   },
   modalContent: {
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     width: "90%",
-    maxHeight: "80%",
+    maxHeight: "90%",
+    
   },
   modalHeader: {
     flexDirection: "row",
@@ -103,11 +106,12 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: 16,
+  
   },
   modalDetail: {
     fontSize: 16,
     color: "#1A1A1A",
-    marginBottom: 8,
+    marginBottom: 18,
   },
   modalSectionTitle: {
     fontSize: 18,
@@ -119,14 +123,14 @@ const styles = StyleSheet.create({
   modalText: {
     fontSize: 14,
     color: "#666",
-    marginBottom: 12,
+    marginBottom: 30,
   },
   imageListContainer: {
     marginBottom: 12,
   },
   modalImage: {
-    width: 100,
-    height: 100,
+    width: 200,
+    height: 200,
     borderRadius: 8,
     marginRight: 8,
   },
@@ -198,6 +202,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#6B48FF",
     fontWeight: "600",
+  },
+  requestDetails: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 5,
+  },
+  paymentStatus: {
+    fontSize: 12,
+    color: '#333',
+    marginTop: 5,
+  },
+  payButton: {
+    backgroundColor: '#6B48FF',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom:30
+  },
+  payButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cancelPaymentButton: {
+    backgroundColor: '#EF5350',
+    padding: 10,
+    alignItems: 'center',
+  },
+  cancelPaymentText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

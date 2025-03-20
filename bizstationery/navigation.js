@@ -27,6 +27,7 @@ import ComplaintsSubmissionScreen from "./screens/ComplaintsSubmissionScreen";
 import ProductListAndStatusScreen from "./screens/ProductListAndStatusScreen";
 import SettingsScreen from './screens/SettingsScreen'
 import SearchScreen from "./screens/SearchScreen";
+import RefundScreen from './screens/RefundScreen'
 
 
 import MenuScreen from "./screens/Menu"; // Create this file
@@ -273,6 +274,14 @@ export default function Navigation() {
           component={SearchScreen}
           options={{ headerShown: false }}
           />
+
+          <Stack.Screen
+          name="Refund"
+          component={RefundScreen}
+          options={{ headerShown: false }}
+          />
+
+          
 
 
         </Stack.Navigator>

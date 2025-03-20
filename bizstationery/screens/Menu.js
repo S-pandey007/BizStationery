@@ -26,7 +26,7 @@ const MenuScreen = () => {
     { title: 'Refund', icon: 'return-down-back-outline' },
     { title: 'Complaints', icon: 'warning-outline' },
     { title: 'Product Customization Request', icon: 'create-outline' },
-    { title: 'Product List & Status', icon: 'list-outline' },
+    // { title: 'Product List & Status', icon: 'list-outline' },
     { title: 'Help & Support', icon: 'help-circle-outline' },
     { title: 'About BizStationery', icon: 'information-circle-outline' },
     { title: 'Settings', icon: 'settings-outline' },
@@ -90,6 +90,10 @@ const MenuScreen = () => {
    
     if(item.title ==='Settings'){
       navigation.navigate("Settings")
+    }
+
+    if(item.title ==='Refund'){
+      navigation.navigate("Refund")
     } 
 
     
