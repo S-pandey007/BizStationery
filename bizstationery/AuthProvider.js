@@ -6,36 +6,34 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  // Check user login status on app start
+
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const storedUser = await AsyncStorage.getItem("loggedInUser")
+        const storedUser = await AsyncStorage.getItem("loggedInUser");
         console.log("Loaded user from AsyncStorage:", storedUser);
         if (storedUser) {
-          setUser(JSON.parse(storedUser));
-          console.log("User set from AsyncStorage:", JSON.parse(storedUser));
-        }else {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          console.log("User set from AsyncStorage:", parsedUser);
+        } else {
           console.log("No user found in AsyncStorage");
         }
       } catch (error) {
-        console.error("Error loading user from AsyncStorage : ",error);
-      }finally {
+        console.error("Error loading user from AsyncStorage:", error);
+      } finally {
         setLoading(false);
-        console.log("AuthProvider loading finished, user:", user);
       }
     };
     loadUser();
   }, []);
 
-  // Login function
   const login = async (userData) => {
     setUser(userData);
     await AsyncStorage.setItem('loggedInUser', JSON.stringify(userData));
     console.log("Logged in user saved:", userData);
   };
 
-  // Logout function
   const logout = async () => {
     setUser(null);
     await AsyncStorage.removeItem('loggedInUser');

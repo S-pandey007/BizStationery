@@ -42,11 +42,13 @@ const ProductDetail = ({ route }) => {
         setLoading(true);
         const response = await fetch(`${BASE_URL}product/${id}`);
         const data = await response.json();
+        // console.log("product", data.product._id);
         setProduct(data.product);
         setSelectedVariant(data.product.variants ? data.product.variants[0] : null);
+        // console.log("product sate", product._id);
       } catch (error) {
         console.log("Error fetching data:", error);
-        Alert.alert("Error", "Failed to load product. Please try again.");
+        // Alert.alert("Error", "Failed to load product. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -81,7 +83,7 @@ const ProductDetail = ({ route }) => {
     setQuantity(quantity + 25);
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product || !selectedVariant) return;
     const stockStatus = getStockStatus(selectedVariant?.stock || product.stock_quantity);
     if (stockStatus.text === "Out of Stock") {
@@ -92,28 +94,44 @@ const ProductDetail = ({ route }) => {
     // Log product to debug
     console.log("Product before addToCart:", product);
   
-    // Use product._id if id is missing
-    const productId = product.id || product._id || id; // Fallback to route.params.id
+    // // Use product._id if id is missing
+    // const productId = product.id || product._id || id; // Fallback to route.params.id
+    // console.log("Product ID:", productId);
+    const cartItem={
+      id: product._id, // Ensure valid ID
+      product_name: product.name || "Unknown Product", // Default if undefined
+      price: product.price
+        ? product.price + (selectedVariant?.priceAdjustment || 0)
+        : selectedVariant?.priceAdjustment || 0,
+      image_link: product.images?.[0] || product.image_link || "https://via.placeholder.com/150",
+      quantity,
+      stock_quantity: selectedVariant?.stock || product.stock_quantity || 0,
+      weight: product.weight || 0, // Default if undefined
+      gst_rate: product.gst_rate || 0,
+      hsn_code: product.hsn_code || "Unknown",
+      variant: selectedVariant?.attributes || {},
+    }
+    console.log("cart item before add cart", cartItem)
+    
+    // dispatch(
+    //   addToCart(cartItem)
+    // );
   
-    dispatch(
-      addToCart({
-        id: productId, // Ensure valid ID
-        product_name: product.name || "Unknown Product", // Default if undefined
-        price: product.price
-          ? product.price + (selectedVariant?.priceAdjustment || 0)
-          : selectedVariant?.priceAdjustment || 0,
-        image_link: product.images?.[0] || product.image_link || "https://via.placeholder.com/150",
-        quantity,
-        stock_quantity: selectedVariant?.stock || product.stock_quantity || 0,
-        weight: product.weight || 0, // Default if undefined
-        gst_rate: product.gst_rate || 0,
-        hsn_code: product.hsn_code || "Unknown",
-        variant: selectedVariant?.attributes || {},
-      })
-    );
+    // // setQuantity(25);
+    // ToastAndroid.show("Added to cart!", ToastAndroid.SHORT);
+
+    try {
+      // 🔴 Send cart data to backend (Replace with your API or Firebase code)
+      // await axios.post("https://your-backend.com/cart", cartItem);
   
-    // setQuantity(25);
-    ToastAndroid.show("Added to cart!", ToastAndroid.SHORT);
+      // ✅ Dispatch Redux action
+      dispatch(addToCart(cartItem));
+  
+      ToastAndroid.show("Added to cart!", ToastAndroid.SHORT);
+    } catch (error) {
+      console.error("Failed to update cart:", error);
+      Alert.alert("Error", "Failed to add product to cart.");
+    }
   };
 
   const renderImageItem = ({ item }) => (

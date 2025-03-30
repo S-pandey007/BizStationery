@@ -53,7 +53,7 @@ const CartScreen = () => {
 
   useEffect(() => {
     calculatePrice();
-    console.log("CartScreen - cartItems:", cartItems);
+    // console.log("CartScreen - cartItems:", cartItems);
   }, [cartItems]);
 
   const totalOrderPrice = eachItemCost.reduce((acc, item) => acc + item.finalPrice, 0);
@@ -210,7 +210,10 @@ const CartScreen = () => {
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>Check Out Order Detail</Text>
                 <TouchableOpacity
-                  onPress={() => setOrderDetailModal(true)}
+                  onPress={() => {
+                    setOrderDetailModal(true)
+                    calculatePrice();
+                  }}
                   style={styles.summaryValue}
                 >
                   <AntDesign name="caretdown" size={20} color="#6B48FF" />

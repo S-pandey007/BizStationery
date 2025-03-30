@@ -14,13 +14,12 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "../style/RegistrationStyle";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-//import useNavigation
 import { useNavigation } from "@react-navigation/native";
-import   Constant from 'expo-constants'
+import Constant from 'expo-constants';
 const BASE_URL = Constant.expoConfig.extra.API_URL;
-console.log(BASE_URL)
-// functional components for Contact Details and GSTIN Details
+console.log(BASE_URL);
 
+// functional components for Contact Details and GSTIN Details
 const ContactDetail = ({
   handleVerifyOTP,
   handleSentOTP,
@@ -63,7 +62,7 @@ const ContactDetail = ({
         *We will send you an OTP for email verification
       </Text>
 
-      {/* send opt to email button */}
+      {/* send OTP to email button */}
       <Pressable
         onPress={() => {
           setOTPToogle(true);
@@ -89,14 +88,6 @@ const ContactDetail = ({
           handleVerifyOTP={handleVerifyOTP}
         />
       )}
-
-      {/* <Pressable onPress={()=>{
-        if(validateContactInfo()){
-          setGSTINToogel(true)
-        }
-        }} style={styles.nextBottonContainer}>
-        <Text style={styles.nextBottonText}>Next</Text>
-      </Pressable> */}
     </View>
   );
 };
@@ -116,7 +107,7 @@ const OTPVerification = ({ email, setOTPToogle, handleVerifyOTP }) => {
         value={otp}
         onChangeText={(text) => setOTP(text)}
       />
-      {/* verify opt to email button */}
+      {/* verify OTP button */}
       <Pressable
         onPress={() => {
           if (handleVerifyOTP(otp, email)) {
@@ -132,7 +123,7 @@ const OTPVerification = ({ email, setOTPToogle, handleVerifyOTP }) => {
             { color: "#fff", fontWeight: "600", padding: 5 },
           ]}
         >
-          verify OTP
+          Verify OTP
         </Text>
       </Pressable>
     </View>
@@ -161,7 +152,7 @@ const GSTINDetail = ({
         }
       />
 
-      {/* verify opt to email button */}
+      {/* verify GSTIN button */}
       <Pressable
         onPress={() => {
           handleGSTINVefication();
@@ -174,12 +165,18 @@ const GSTINDetail = ({
             { color: "#fff", fontWeight: "600", padding: 5 },
           ]}
         >
-          Verify GSATIN
+          Verify GSTIN
         </Text>
       </Pressable>
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+      
+      {/* Register button - fixing this to ensure handleSubmit gets called */}
+      <TouchableOpacity 
+        style={styles.submitButton} 
+        onPress={handleSubmit}
+        activeOpacity={0.7}
+      >
         <LinearGradient
-          colors={["#bdc3c7", "#bdc3c7"]}
+          colors={["#423CF5", "#6A48F5"]}  // Changed colors to make button more visible
           style={styles.buttonGradient}
         >
           <Text style={styles.buttonText}>Register</Text>
@@ -232,7 +229,7 @@ const RegistrationScreen = () => {
     }
   };
 
-  // method to send opt
+  // method to send OTP
   const handleSentOTP = async () => {
     console.log("OTP sent to email");
     const email = formData.email;
@@ -247,7 +244,6 @@ const RegistrationScreen = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        // Alert.alert('Success', 'OTP Sent Successfully!');
         ToastAndroid.showWithGravity(
           "OTP Sent Successfully!",
           ToastAndroid.LONG,
@@ -257,21 +253,20 @@ const RegistrationScreen = () => {
         Alert.alert("Error", data.message || "Failed to send OTP");
       }
     } catch (error) {
+      console.error("Send OTP Error:", error);
       Alert.alert("Error", "Network error. Please try again.");
     }
   };
 
   const handleVerifyOTP = async (otp, email) => {
-    // const email = formData.email;
     if (!email) {
       Alert.alert("Error", "Email is required");
-      return;
+      return false;
     }
 
     console.log(otp);
     console.log(email);
     try {
-      // const response = await axios.post('http://192.168.43.3:8001/user/verifyotp', { email, otp });
       const response = await fetch(`${BASE_URL}user/verifyotp`, {
         method: "POST",
         headers: {
@@ -283,22 +278,24 @@ const RegistrationScreen = () => {
       console.log(data);
 
       if (response.ok) {
-        // Alert.alert('Success', 'OTP verified successfully');
         ToastAndroid.showWithGravity(
           "OTP Verified Successfully!",
           ToastAndroid.LONG,
           ToastAndroid.CENTER
         );
         setGSTINToogel(true);
+        return true;
       } else {
         Alert.alert(
           "Error",
-          response.data.message || "OTP verification failed"
+          data.message || "OTP verification failed"
         );
+        return false;
       }
     } catch (error) {
-      // console.error("OTP Verification Error:", error.response?.data || error.message);
+      console.error("OTP Verification Error:", error);
       Alert.alert("Error", "OTP verification failed");
+      return false;
     }
   };
 
@@ -339,61 +336,85 @@ const RegistrationScreen = () => {
           ToastAndroid.LONG,
           ToastAndroid.CENTER
         );
-
-        // Alert.alert('Error', data.message || 'Invalid GSTIN');
       }
     } catch (error) {
       console.error("GSTIN Verification Error:", error);
-
       ToastAndroid.showWithGravity(
         "GSTIN verification failed. Please try again.",
         ToastAndroid.LONG,
         ToastAndroid.CENTER
       );
-
-      Alert.alert("Error", "GSTIN verification failed. Please try again.");
     }
   };
 
   // Submit form
   const handleSubmit = async () => {
-    console.log("Form Submitted:", formData);
-
-    // Trim and ensure data is in correct format before saving
-    const email = formData.email.trim();
-    const phone = formData.phoneNumber.trim();
-    const gstin = formData.gstin.trim();
-    const name = formData.name.trim();
-    const businessName = formData.businessName.trim();
-    const pinCode = formData.pinCode.trim()
-
-    const userData = { email, phone , name,gstin,businessName,pinCode };
-    await AsyncStorage.setItem("userData", JSON.stringify(userData));
-
-    // Verify saved data
-    try {
-        const savedUserData = await AsyncStorage.getItem("userData");
-        if (savedUserData) {
-            const parsedData = JSON.parse(savedUserData);
-            console.log("(DEBUG) Stored Email:", parsedData.email);
-            console.log("(DEBUG) Stored Phone:", parsedData.phone);
-        }
-    } catch (error) {
-        console.error("Error retrieving user data:", error);
+    console.log("Handle Submit Called");  // Debug log
+    
+    // Add form validation before submitting
+    if (!validatePersonalInfo() || !validateContactInfo()) {
+      Alert.alert("Error", "Please check form for errors");
+      return;
     }
 
-    setFormData({
-        name: "",
-        businessName: "",
-        pinCode: "",
-        phoneNumber: "",
-        email: "",
-        gstin: "",
-    });
-    setErrors({});
-    navigation.navigate("Login");
-};
+    try {
+      console.log("Form Submitted:", formData);
+      
+      // Trim and ensure data is in correct format before saving
+      const email = formData.email.trim();
+      const phone = formData.phoneNumber.trim();
+      const gstin = formData.gstin.trim();
+      const name = formData.name.trim();
+      const businessName = formData.businessName.trim();
+      const pinCode = formData.pinCode.trim();
+  
+      const response = await fetch(`${BASE_URL}retailer/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          mobile: phone,
+          name: name,
+          gstin: gstin,
+          businessName: businessName,
+          pin: pinCode
+        })
+      });
 
+      const result = await response.json();
+      console.log("Registration Response:", result);
+      
+      if (response.ok) {
+        ToastAndroid.showWithGravity(
+          "Registration Successful!",
+          ToastAndroid.LONG,
+          ToastAndroid.CENTER
+        );
+
+        // Reset form data and errors after successful registration
+        setFormData({
+          name: "",
+          businessName: "",
+          pinCode: "",
+          phoneNumber: "",
+          email: "",
+          gstin: "",
+        });
+        setErrors({});
+        
+        // Navigate to Login screen
+        navigation.navigate("Login");
+      } else {
+        // Handle API errors
+        Alert.alert("Registration Error", result.message || "Registration failed");
+      }
+    } catch (error) {
+      console.error("Registration Error:", error);
+      Alert.alert("Error", "Network error. Please try again.");
+    }
+  };
 
   return (
     <KeyboardAvoidingView

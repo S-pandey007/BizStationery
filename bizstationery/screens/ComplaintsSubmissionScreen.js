@@ -71,7 +71,7 @@ const ComplaintsSubmissionScreen = () => {
       );
       if (!response.ok) throw new Error("Failed to fetch complaints");
       const data = await response.json();
-      console.log("complaint data :", data.complaints[0].images);
+      // console.log("complaint data :", data.complaints[0].images);
 
       setComplaints(data.complaints || []);
     } catch (error) {
@@ -202,7 +202,7 @@ const ComplaintsSubmissionScreen = () => {
     const newComplaint = {
       title: title || "No Title",
       message: message || "No Message",
-      images: selectedImages, // Changed: Use array of Cloudinary URLs directly
+      images: selectedImages ||"", // Changed: Use array of Cloudinary URLs directly
       status: "Pending",
       date: new Date().toISOString().split("T")[0],
       wholesalerResponse: "",
@@ -259,7 +259,12 @@ const ComplaintsSubmissionScreen = () => {
     >
       <Text style={styles.complaintTitle}>{item.title}</Text>
       <Text style={styles.complaintDate}>{item.date}</Text>
-      <Text style={styles.complaintStatus}>{item.status}</Text>
+      {
+        item.status === "Pending" ? (
+          <Text style={styles.complaintStatus}>{item.status}</Text> ):(
+            <Text style={[styles.complaintStatus,{color:'green'}]}>{item.status}</Text>
+          )
+      }
       <Text style={styles.complaintDetail}>
         {item.complaintType
           ? `${

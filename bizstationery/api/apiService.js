@@ -10,7 +10,7 @@ export const fetchCategories = () => async (dispatch) => {
     // dispatch(setCategoryLoading());
     const response = await fetch(`${BASE_URL}category/`);
     const data = await response.json();
-    console.log("fetched data : ", data.categories);
+    // console.log("fetched data : ", data.categories);
     dispatch(setCategories(data.categories));
   } catch (error) {
     console.error("Error:", error);

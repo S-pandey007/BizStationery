@@ -21,9 +21,9 @@ const BASE_URL = Constant.expoConfig.extra.API_URL;
 
 const ProductCustomizationRequest = ({ route }) => {
   // const id = route.params.id;
-  const { productId:id, orderId: navigatedOrderId } = route.params;
-  console.log(id);
-  console.log(navigatedOrderId);
+  const { id:id, orderId: navigatedOrderId } = route.params;
+  console.log("id ",id);
+  console.log("navigatedOrderId : ",navigatedOrderId);
   
   const navigation = useNavigation();
   const [customizationDetails, setCustomizationDetails] = useState('');

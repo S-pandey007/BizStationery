@@ -29,7 +29,7 @@ const HomeScreen = () => {
   const dispatch = useDispatch();
   const categoryData = useSelector((state) => state.categories);
   const categoryList = categoryData.categoryList;
-  const cartItems = useSelector((state) => state.cart.cartItems);
+  const cartItems = useSelector((state) => state.cart.cartItems || []);
   const cartCounts = cartItems.length;
 
   const [recommendedData, setRecommendedData] = useState([]);
@@ -37,13 +37,18 @@ const HomeScreen = () => {
   const [productCart, setProductCart] = useState(null);
   const [refreshing, setRefreshing] = useState(false); // State for refresh control
   const [userName, setUserName] = useState();
-  const fetchLocalUser = async () => {
-    const savedUserData = await AsyncStorage.getItem("userData");
-    const userData = savedUserData ? JSON.parse(savedUserData) : null;
-    // console.log("User Data from AsyncStorage:", userData.name.split(' ')[0]);
-    setUserName(userData.name.split(" ")[0]);
-  };
-  fetchLocalUser();
+  
+
+  useEffect(()=>{
+    const fetchLocalUser = async () => {
+      const userData = await AsyncStorage.getItem('loggedInUser');
+      const parsedData = JSON.parse(userData);
+      console.log("Home screen fecth userData",parsedData.data.name);
+    
+      setUserName(parsedData.data.name.split(' ')[0]);
+    };
+    fetchLocalUser();
+  },[])
   // Fetch all data (initial and refresh)
   const fetchAllData = async () => {
     try {

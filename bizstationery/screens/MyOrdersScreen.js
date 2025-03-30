@@ -332,6 +332,7 @@ const MyOrdersScreen = () => {
                         >
                           <Text
                           style={{padding:4}}
+                          numberOfLines={1}
                           >{item.productId || "Unknown Product"}</Text></Pressable>
                         <Text style={[styles.tableCell, { flex: 1 }]}>
                           ₹{item.pricePerItem || "N/A"}
@@ -346,8 +347,8 @@ const MyOrdersScreen = () => {
                             navigation.navigate(
                               "ProductCustomization",
                               {
-                                productId:
-                                  item.productId || item.productId,
+                              
+                                  id: item.productId || item.productId,
                                 orderId: selectedOrder.orderId,
                               }
                             )

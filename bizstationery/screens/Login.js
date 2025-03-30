@@ -16,7 +16,6 @@ import Constant from "expo-constants";
 
 const BASE_URL = Constant.expoConfig.extra.API_URL;
 
-// Email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const LoginScreen = () => {
@@ -27,58 +26,21 @@ const LoginScreen = () => {
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const validateEmail = (email) => {
-    return emailRegex.test(email);
-  };
+  const validateEmail = (email) => emailRegex.test(email);
 
   const handleEmailSubmit = async () => {
     setIsLoading(true);
     try {
       const trimmedEmail = email.trim();
       if (!trimmedEmail) {
-        ToastAndroid.showWithGravity(
-          "Please enter an email!",
-          ToastAndroid.LONG,
-          ToastAndroid.CENTER
-        );
+        ToastAndroid.showWithGravity("Please enter an email!", ToastAndroid.LONG, ToastAndroid.CENTER);
         return;
       }
-
-      // Validate email syntax
       if (!validateEmail(trimmedEmail)) {
-        ToastAndroid.showWithGravity(
-          "Please enter a valid email address!",
-          ToastAndroid.LONG,
-          ToastAndroid.CENTER
-        );
+        ToastAndroid.showWithGravity("Please enter a valid email address!", ToastAndroid.LONG, ToastAndroid.CENTER);
         return;
       }
 
-      const savedUserData = await AsyncStorage.getItem("userData");
-      if (!savedUserData) {
-        ToastAndroid.showWithGravity(
-          "No user data found! Please register first.",
-          ToastAndroid.LONG,
-          ToastAndroid.CENTER
-        );
-        return;
-      }
-
-      const parsedData = JSON.parse(savedUserData);
-      console.log("User data retrieved from AsyncStorage:", parsedData);
-
-      const storedEmail = parsedData?.email?.trim();
-      if (trimmedEmail !== storedEmail) {
-        console.log("Email not matched");
-        ToastAndroid.showWithGravity(
-          "Email not found in storage!",
-          ToastAndroid.LONG,
-          ToastAndroid.CENTER
-        );
-        return;
-      }
-
-      // Send OTP request to backend
       const response = await fetch(`${BASE_URL}user/sendotp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -87,23 +49,15 @@ const LoginScreen = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to send OTP");
+        throw new Error(data.message || "Email not registered");
       }
 
       console.log("OTP sent:", data);
       setShowOtpInput(true);
-      ToastAndroid.showWithGravity(
-        "Enter the OTP sent to your email!",
-        ToastAndroid.LONG,
-        ToastAndroid.CENTER
-      );
+      ToastAndroid.showWithGravity("Enter the OTP sent to your email!", ToastAndroid.LONG, ToastAndroid.CENTER);
     } catch (error) {
       console.error("Error sending OTP:", error.message);
-      ToastAndroid.showWithGravity(
-        `Error: ${error.message}`,
-        ToastAndroid.LONG,
-        ToastAndroid.CENTER
-      );
+      ToastAndroid.showWithGravity(`Error: ${error.message}`, ToastAndroid.LONG, ToastAndroid.CENTER);
     } finally {
       setIsLoading(false);
     }
@@ -114,15 +68,10 @@ const LoginScreen = () => {
     try {
       const trimmedOtp = otp.trim();
       if (!trimmedOtp) {
-        ToastAndroid.showWithGravity(
-          "Please enter the OTP!",
-          ToastAndroid.LONG,
-          ToastAndroid.CENTER
-        );
+        ToastAndroid.showWithGravity("Please enter the OTP!", ToastAndroid.LONG, ToastAndroid.CENTER);
         return;
       }
 
-      // Verify OTP with backend
       const response = await fetch(`${BASE_URL}user/verifyotp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -134,42 +83,39 @@ const LoginScreen = () => {
         throw new Error(data.message || "Invalid OTP");
       }
 
-      const savedUserData = await AsyncStorage.getItem("userData");
-      const userData = JSON.parse(savedUserData);
+      // Fetch user data (adjust if verifyotp returns user data)
+      const userResponse = await fetch(`${BASE_URL}retailer/profile/${email.trim()}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      const userData = await userResponse.json();
 
-      login(userData); // Update global auth state
+      console.log("looged User data:", userData);
+      if (!userResponse.ok || !userData) {
+        throw new Error("Failed to fetch user data");
+      }
+
+      // Use AuthProvider's login function
+      await login(userData);
       setEmail("");
       setOtp("");
       setShowOtpInput(false);
-      ToastAndroid.showWithGravity(
-        "Logged In!",
-        ToastAndroid.LONG,
-        ToastAndroid.CENTER
-      );
+      ToastAndroid.showWithGravity("Logged In!", ToastAndroid.LONG, ToastAndroid.CENTER);
       navigation.navigate("Home");
     } catch (error) {
-      console.error("Error verifying OTP:", error.message);
-      ToastAndroid.showWithGravity(
-        `Error: ${error.message}`,
-        ToastAndroid.LONG,
-        ToastAndroid.CENTER
-      );
+      console.error("Error verifying OTP or fetching user:", error.message);
+      ToastAndroid.showWithGravity(`Error: ${error.message}`, ToastAndroid.LONG, ToastAndroid.CENTER);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.container}
-    >
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
       <View style={styles.background}>
         <Text style={styles.title}>Login</Text>
-
         {!showOtpInput ? (
           <>
-            {/* Email Input */}
             <TextInput
               style={styles.input}
               placeholder="Enter Email"
@@ -179,21 +125,16 @@ const LoginScreen = () => {
               onChangeText={setEmail}
               editable={!isLoading}
             />
-
-            {/* Submit Email Button */}
             <TouchableOpacity
               style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
               onPress={handleEmailSubmit}
               disabled={isLoading}
             >
-              <Text style={styles.buttonText}>
-                {isLoading ? "Sending OTP..." : "Submit Email"}
-              </Text>
+              <Text style={styles.buttonText}>{isLoading ? "Sending OTP..." : "Submit Email"}</Text>
             </TouchableOpacity>
           </>
         ) : (
           <>
-            {/* OTP Input */}
             <TextInput
               style={styles.input}
               placeholder="Enter OTP"
@@ -204,16 +145,12 @@ const LoginScreen = () => {
               onChangeText={setOtp}
               editable={!isLoading}
             />
-
-            {/* Submit OTP Button */}
             <TouchableOpacity
               style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
               onPress={handleOtpSubmit}
               disabled={isLoading}
             >
-              <Text style={styles.buttonText}>
-                {isLoading ? "Verifying..." : "Verify OTP"}
-              </Text>
+              <Text style={styles.buttonText}>{isLoading ? "Verifying..." : "Verify OTP"}</Text>
             </TouchableOpacity>
           </>
         )}

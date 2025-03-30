@@ -27,7 +27,7 @@ const ProfileScreen = () => {
   const [isCompanyModalVisible, setIsCompanyModalVisible] = useState(false);
   const [isBankModalVisible, setIsBankModalVisible] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
-  const [localProfileLink, setLocalProfileLink] = useState('');
+  const [localProfileLink, setLocalProfileLink] = useState();
   const [isLoading, setIsLoading] = useState(true);
 
   const [profileForm, setProfileForm] = useState({
@@ -49,7 +49,10 @@ const ProfileScreen = () => {
 
   const fetchProfileFromAPI = async () => {
     try {
-      const email = await AsyncStorage.getItem('userEmail');
+      const userData = await AsyncStorage.getItem('loggedInUser');
+      const parsedData = JSON.parse(userData);
+      console.log("profile screen fecth userData",parsedData.data.email);
+      const email = parsedData.data.email;
       if (!email) return;
   
       const response = await fetch(`${BASE_URL}retailer/profile/${email}`);
@@ -120,8 +123,8 @@ const ProfileScreen = () => {
       
         console.log("Updated user data stored in AsyncStorage:", updatedUserData);
       } catch (error) {
-        console.error("Error fetching user details:", error.message);
-        alert("Couldn’t load user details. Please log in again.");
+        // console.error("Error fetching user details:", error.message);
+        alert("Please Update your Profile.");
       }
       
     }
@@ -244,13 +247,15 @@ const ProfileScreen = () => {
   };
 
   const storeProfileImage = async (link) => {
-    try {
-      const userProfile = { profileImage: link };
-      await AsyncStorage.setItem('userProfile', JSON.stringify(userProfile));
-      setLocalProfileLink(link);
-    } catch (error) {
-      console.log('Error storing profile image:', error);
-    }
+    const updatedData = {
+      ...userData,
+      profileImage: link,
+    };
+
+     await saveData(updatedData)
+    console.log("profile link saved");
+    setLocalProfileLink(link)
+    
   };
 
   const handleProfileUpdate = async () => {
@@ -361,14 +366,14 @@ const ProfileScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image
-          source={{ uri: localProfileLink  }}
+          source={{ uri: userData?.profileImage }}
           style={styles.profileImage}
           onError={(e) => console.log('Image load error:', e)}
         />
         <View style={styles.headerTextContainer}>
           <Text style={styles.name}>{userData?.name || 'Not set'}</Text>
           <Text style={styles.location}>
-            <Ionicons name="location-outline" size={16} color="#666" /> {userData?.location || 'Not set'}
+            <Ionicons name="location-outline" size={16} color="#666" /> {userData?.address.state || 'Not set'}
           </Text>
         </View>
         <TouchableOpacity style={styles.editButton} onPress={() => setIsProfileModalVisible(true)}>
@@ -511,15 +516,15 @@ const ProfileScreen = () => {
             <View style={styles.iconContainer}>
               <Ionicons name="business-outline" size={20} color="#666" />
             </View>
-            <Text style={styles.infoText}>Company Name: {userData?.companyName || 'Not set'}</Text>
+            <Text style={styles.infoText}>Company Name: {userData?.company.name || 'Not set'}</Text>
           </View>
           <View style={styles.infoItem}>
             <View style={styles.iconContainer}>
               <Ionicons name="globe-outline" size={20} color="blue" />
             </View>
             <Pressable onPress={() => openUrl(userData?.companyWebsite)}>
-              <Text style={[styles.infoText, { fontWeight: '600', color: 'blue' }]}>
-                Company Website: {userData?.companyWebsite || 'Not set'}
+              <Text  numberOfLines={1} style={[styles.infoText, { fontWeight: '600', color: 'blue' }]}>
+                Company Website: {userData?.onlinePresence.companyWebsite || 'Not set'}
               </Text>
             </Pressable>
           </View>
@@ -527,22 +532,22 @@ const ProfileScreen = () => {
             <View style={styles.iconContainer}>
               <Ionicons name="document-text-outline" size={20} color="#666" />
             </View>
-            <Text style={styles.infoText}>GSTIN: {userData?.gstin || 'Not set'}</Text>
+            <Text style={styles.infoText}>GSTIN: {userData?.company.gstin || 'Not set'}</Text>
           </View>
           <View style={styles.infoItem}>
             <View style={styles.iconContainer}>
               <Ionicons name="card-outline" size={20} color="#666" />
             </View>
-            <Text style={styles.infoText}>PAN: {userData?.pan || 'Not set'}</Text>
+            <Text style={styles.infoText}>PAN: {userData?.company.pan || 'Not set'}</Text>
           </View>
           <View style={styles.socialIcons}>
-            <TouchableOpacity onPress={() => openUrl(userData?.socialLinks?.facebook)} style={styles.socialIcon}>
+            <TouchableOpacity onPress={() => openUrl(userData?.onlinePresence?.socialLinks?.facebook)} style={styles.socialIcon}>
               <Ionicons name="logo-facebook" size={24} color="#4267B2" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => openUrl(userData?.socialLinks?.instagram)} style={styles.socialIcon}>
+            <TouchableOpacity onPress={() => openUrl(userData?.onlinePresence?.socialLinks?.instagram)} style={styles.socialIcon}>
               <Ionicons name="logo-instagram" size={24} color="#E4405F" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => openUrl(userData?.socialLinks?.youtube)} style={styles.socialIcon}>
+            <TouchableOpacity onPress={() => openUrl(userData?.onlinePresence?.socialLinks?.youtube)} style={styles.socialIcon}>
               <Ionicons name="logo-youtube" size={24} color="#FF0000" />
             </TouchableOpacity>
           </View>
