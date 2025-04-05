@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   Image,
   Modal,
-  TextInput
+  TextInput,
+  ActivityIndicator,
 } from "react-native";
 import Constants from "expo-constants";
 import styles from "../style/SearchStyle";
@@ -24,6 +25,7 @@ const SearchScreen = ({ route }) => {
   const { query } = route.params;
   const navigation = useNavigation()
 //   console.log(query)
+const [loading, setLoading] = useState(false);
 const [results, setResults] = useState({ categories: [], products: [] });
 const [message, setMessage] = useState("Searching....");
 const [currentPage, setCurrentPage] = useState(1);
@@ -59,6 +61,7 @@ useEffect(() => {
 
 useEffect(() => {
     const fetchSearchResults = async () => {
+      setLoading(true);
       try {
         let url = `${BASE_URL}product/search?q=${query}&page=${currentPage}&limit=7` 
         if (selectedCategory) {
@@ -90,6 +93,7 @@ useEffect(() => {
           setResults({ categories: [], products: [] });
           setMessage(data.message || "Something went wrong");
         }
+        setLoading(false); // Stop loading
       } catch (error) {
         setResults({ categories: [], products: [] });
         setMessage("Error fetching search results");
@@ -129,7 +133,9 @@ useEffect(() => {
       )}
   
       {/* Products Section */}
-      <FlatList
+      {
+        !loading ? (
+          <FlatList
         data={results.products}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
@@ -151,6 +157,12 @@ useEffect(() => {
         )}
         contentContainerStyle={styles.listContainer}
       />
+        ):(
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#6B48FF" />
+          </View>
+        )
+      }
   
       <Text style={styles.message}>{message}</Text>
   

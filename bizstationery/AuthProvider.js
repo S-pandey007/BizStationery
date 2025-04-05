@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -37,6 +36,8 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setUser(null);
     await AsyncStorage.removeItem('loggedInUser');
+    await AsyncStorage.removeItem('userData');
+
     console.log("Logged out, user cleared");
   };
 

@@ -250,7 +250,7 @@ const ProductDetail = ({ route }) => {
             )}
           </View>
 
-          <View style={styles.quantityContainer}>
+          {/* <View style={styles.quantityContainer}>
             <TouchableOpacity
               style={styles.quantityButton}
               onPress={decreaseQuantity}
@@ -274,7 +274,7 @@ const ProductDetail = ({ route }) => {
             >
               <Text style={styles.quantityButtonText}>+</Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity

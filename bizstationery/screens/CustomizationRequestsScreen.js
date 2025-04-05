@@ -47,10 +47,11 @@ const CustomizationRequestsScreen = () => {
         const storedData = await AsyncStorage.getItem("userData");
         if (!storedData) throw new Error("No user data in storage");
         const parsedData = JSON.parse(storedData);
-        setRetailerId(parsedData.id);
+        console.log("Parsed Data from customization:", parsedData); // Debugging line
+        setRetailerId(parsedData._id);
 
         const response = await fetch(
-          `${BASE_URL}customization/request?retailerId=${parsedData.id}`,
+          `${BASE_URL}customization/request?retailerId=${parsedData._id}`,
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },

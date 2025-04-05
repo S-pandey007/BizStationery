@@ -94,44 +94,47 @@ const ProfileScreen = () => {
     }
   };
 
-  useEffect(()=>{
-    const storeAllData_in_localStorage =async()=>{
-      try {
-        // Retrieve user data from AsyncStorage
-        const storedData = await AsyncStorage.getItem("userData");
-        if (!storedData) throw new Error("No user data in storage");
+  // useEffect(()=>{
+  //   const storeAllData_in_localStorage =async()=>{
+  //     try {
+  //       // Retrieve user data from AsyncStorage
+  //       const storedData = await AsyncStorage.getItem("loggedInUser");
+  //       if (!storedData) throw new Error("No user data in storage");
       
-        // Parse the stored JSON data
-        const parsedData = JSON.parse(storedData);
-        console.log("User data from storage:", parsedData);
+  //       // Parse the stored JSON data
+  //       const parsedData = JSON.parse(storedData);
+  //       console.log("User data from storage:", parsedData.data);
+  //       console.log("User data from storage:", parsedData.data.name);
+  //       console.log("User data from storage:", parsedData.data.email);
+  //       console.log("User data from storage:", parsedData.data.mobile);
       
-        // Fetch user profile from backend
-        const response = await fetch(
-          `${BASE_URL}retailer/profile/${parsedData.name}/${parsedData.mobile}/${parsedData.email}`
-        );
-        if (!response.ok) throw new Error("Failed to fetch retailer profile");
+  //       // Fetch user profile from backend
+  //       const response = await fetch(
+  //         `${BASE_URL}retailer/profile/${parsedData.data.name}/${parsedData.data.mobile}/${parsedData.data.email}`
+  //       );
+  //       if (!response.ok) throw new Error("Failed to fetch retailer profile");
       
-        // Parse the response data
-        const data = await response.json();
-        console.log("Retailer profile:", data);
+  //       // Parse the response data
+  //       const data = await response.json();
+  //       console.log("Retailer profile:", data);
       
-        const userId = data.data._id || ""; // Get the user ID from API response
+  //       const userId = data.data._id || ""; // Get the user ID from API response
       
-        // Update AsyncStorage with the userId
-        const updatedUserData = { ...parsedData, id: userId };
-        await AsyncStorage.setItem("userData", JSON.stringify(updatedUserData));
+  //       // Update AsyncStorage with the userId
+  //       const updatedUserData = { ...parsedData, id: userId };
+  //       await AsyncStorage.setItem("userData", JSON.stringify(updatedUserData));
       
-        console.log("Updated user data stored in AsyncStorage:", updatedUserData);
-      } catch (error) {
-        // console.error("Error fetching user details:", error.message);
-        alert("Please Update your Profile.");
-      }
+  //       console.log("Updated user data stored in AsyncStorage:", updatedUserData);
+  //     } catch (error) {
+  //       // console.error("Error fetching user details:", error.message);
+  //       alert("Please Update your Profile.");
+  //     }
       
-    }
+  //   }
 
-    storeAllData_in_localStorage()
+  //   storeAllData_in_localStorage()
 
-  },[])
+  // },[])
   
   const loadLocalData = async () => {
     try {
@@ -360,7 +363,10 @@ const ProfileScreen = () => {
     );
   }
 
-  console.log(userData.bank?.ifsc);
+  
+  console.log("this is profile screen entered user data", userData);
+
+      
   
   return (
     <View style={styles.container}>

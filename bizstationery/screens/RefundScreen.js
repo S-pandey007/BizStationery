@@ -36,10 +36,12 @@ const RefundScreen = () => {
       if (!storedData) throw new Error("No user data in storage");
 
       const parsedData = JSON.parse(storedData);
-      setUserId(parsedData.id);
+      console.log("Parsed Data from refund:", parsedData); // Debugging line
+      console.log("User ID:", parsedData._id); // Debugging line
+      setUserId(parsedData._id);
 
       const response = await fetch(
-        `${BASE_URL}refund?userId=${parsedData.id}`,
+        `${BASE_URL}refund?userId=${parsedData._id}`,
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },

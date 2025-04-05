@@ -52,11 +52,11 @@ const MyOrdersScreen = () => {
       if (!storedData) throw new Error("No user data in storage");
 
       const parsedData = JSON.parse(storedData);
-      console.log("User data from storage:", parsedData);
-      console.log("user id : ", parsedData.id);
-      setUserId(parsedData.id);
+      console.log("User data from storage order screen:", parsedData);
+      console.log("user id : ", parsedData._id);
+      setUserId(parsedData._id);
 
-      const response = await fetch(`${BASE_URL}order?userId=${parsedData.id}`, {
+      const response = await fetch(`${BASE_URL}order?userId=${parsedData._id}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -76,8 +76,8 @@ const MyOrdersScreen = () => {
         }))
       );
     } catch (error) {
-      console.error("Error fetching user details:", error.message);
-      alert("Couldn’t load user details. Please log in again.");
+      console.info("Error fetching user details:", error.message);
+      alert("Couldn’t load user details.");
     }
   };
 
@@ -147,7 +147,7 @@ const MyOrdersScreen = () => {
   const generatePDF = async (order) => {
     const orderId = order.orderId;
     console.log(`Generating PDF for order ${orderId}`);
-    console.log(`Generating PDF for order ${userId}`);
+    console.log(`Generating PDF for user ${userId}`);
 
     try {
       const response = await fetch(

@@ -90,7 +90,7 @@ const LoginScreen = () => {
       });
       const userData = await userResponse.json();
 
-      console.log("looged User data:", userData);
+      console.log("looged User data AuthProvider:", userData.data);
       if (!userResponse.ok || !userData) {
         throw new Error("Failed to fetch user data");
       }

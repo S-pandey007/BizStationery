@@ -47,8 +47,9 @@ const ComplaintsSubmissionScreen = () => {
       const storedData = await AsyncStorage.getItem("userData");
       if (storedData) {
         const parsedData = JSON.parse(storedData);
-        setUserId(parsedData.id);
-        fetchComplaints(parsedData.id);
+        console.log("Stored Data from complain screens:", parsedData);
+        setUserId(parsedData._id);
+        fetchComplaints(parsedData._id);
       }
     };
     loadData();
@@ -57,7 +58,7 @@ const ComplaintsSubmissionScreen = () => {
       fetchOrders();
       fetchProductCategories();
     }
-  }, [submitModalVisible]);
+  }, []);
 
   // Changed: Fetch complaints by retailerId
   const fetchComplaints = async (retailerId) => {
@@ -248,7 +249,7 @@ const ComplaintsSubmissionScreen = () => {
     </View>
   );
 
-  const renderComplaint = ({ item }) => (
+  const renderComplaint = ({item} ) => (
     <TouchableOpacity
       key={item._id}
       style={styles.complaintCard}

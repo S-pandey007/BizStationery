@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   menuItem: {
-    width: width / 3 - 15, // 3 items per row with margins
+    width: width / 2 - 20, // 3 items per row with margins
     backgroundColor: "#FFFFFF",
     // backgroundColor: 'red',
     borderRadius: 12,

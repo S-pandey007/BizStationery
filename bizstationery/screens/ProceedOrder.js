@@ -42,7 +42,7 @@ const ProceedOrder = ({ route }) => {
         const storedData = await AsyncStorage.getItem("userData");
         if (!storedData) throw new Error("No user data in storage");
         const parsedData = JSON.parse(storedData);
-        console.log("User data from storage:", parsedData);
+        console.log("User data from storage proceed:", parsedData);
 
         setName(parsedData.name || "Unknown");
         setEmail(parsedData.email || "");
