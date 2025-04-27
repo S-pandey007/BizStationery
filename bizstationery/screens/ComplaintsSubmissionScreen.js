@@ -87,8 +87,8 @@ const ComplaintsSubmissionScreen = () => {
       const storeData = await AsyncStorage.getItem("userData");
       if (!storeData) throw new Error("No user data in storage");
       const parsedData = JSON.parse(storeData);
-      setUserId(parsedData.id);
-      const response = await fetch(`${BASE_URL}order?userId=${parsedData.id}`, {
+      setUserId(parsedData._id);
+      const response = await fetch(`${BASE_URL}order?userId=${parsedData._id}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -110,6 +110,7 @@ const ComplaintsSubmissionScreen = () => {
       });
       if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
+      console.log("categories data :", data.categories);
       setProductCategories(data.categories || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -527,7 +528,7 @@ const ComplaintsSubmissionScreen = () => {
                     <FlatList
                       data={selectedImages}
                       renderItem={renderImageItem}
-                      keyExtractor={(item) => item.uri}
+                      keyExtractor={(item) => `image-${index}-${item}`}
                       horizontal
                       style={styles.imageList}
                     />
@@ -603,7 +604,7 @@ const ComplaintsSubmissionScreen = () => {
                                 style={styles.sliderImage}
                               />
                             )}
-                            keyExtractor={(item, index) => `${item}-${index}`}
+                            keyExtractor={(item, index) =>  `detail-image-${index}-${item}`}
                             horizontal
                             pagingEnabled // Enables slider behavior
                             showsHorizontalScrollIndicator={false} // Hides scroll bar

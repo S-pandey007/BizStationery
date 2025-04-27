@@ -491,14 +491,14 @@ const ProfileScreen = () => {
             <View style={styles.iconContainer}>
               <Ionicons name="phone-portrait-outline" size={20} color="#666" />
             </View>
-            <Text style={styles.infoText}>Primary Mobile: {userData?.mobile || 'Not set'}</Text>
+            <Text style={styles.infoText}>{userData?.mobile || 'Not set'}</Text>
             {userData?.mobile && <Text style={styles.verified}>✓</Text>}
           </View>
           <View style={styles.infoItem}>
             <View style={styles.iconContainer}>
               <Ionicons name="mail-outline" size={20} color="#666" />
             </View>
-            <Text style={styles.infoText}>Primary Email: {userData?.email || 'Not set'}</Text>
+            <Text style={styles.infoText}>{userData?.email || 'Not set'}</Text>
             {userData?.email && <Text style={styles.verified}>✓</Text>}
           </View>
           <View style={styles.infoItem}>
@@ -506,7 +506,7 @@ const ProfileScreen = () => {
               <Ionicons name="home-outline" size={20} color="#666" />
             </View>
             <Text style={styles.infoText}>
-              Address: {userData?.address?.street || ''}, {userData?.address?.city || ''}, {userData?.address?.state || ''}
+              {userData?.address?.street || ''}, {userData?.address?.city || ''}, {userData?.address?.state || ''}
             </Text>
           </View>
         </View>
@@ -522,7 +522,7 @@ const ProfileScreen = () => {
             <View style={styles.iconContainer}>
               <Ionicons name="business-outline" size={20} color="#666" />
             </View>
-            <Text style={styles.infoText}>Company Name: {userData?.company.name || 'Not set'}</Text>
+            <Text style={styles.infoText}>{userData?.company.name || 'Not set'}</Text>
           </View>
           <View style={styles.infoItem}>
             <View style={styles.iconContainer}>
@@ -530,7 +530,7 @@ const ProfileScreen = () => {
             </View>
             <Pressable onPress={() => openUrl(userData?.companyWebsite)}>
               <Text  numberOfLines={1} style={[styles.infoText, { fontWeight: '600', color: 'blue' }]}>
-                Company Website: {userData?.onlinePresence.companyWebsite || 'Not set'}
+                {userData?.onlinePresence.companyWebsite || 'Not set'}
               </Text>
             </Pressable>
           </View>

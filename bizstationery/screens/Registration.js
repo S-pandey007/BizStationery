@@ -17,7 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import Constant from 'expo-constants';
 const BASE_URL = Constant.expoConfig.extra.API_URL;
-console.log(BASE_URL);
+// console.log(BASE_URL);
 
 // functional components for Contact Details and GSTIN Details
 const ContactDetail = ({
@@ -168,6 +168,8 @@ const GSTINDetail = ({
           Verify GSTIN
         </Text>
       </Pressable>
+
+
       
       {/* Register button - fixing this to ensure handleSubmit gets called */}
       <TouchableOpacity 
@@ -421,13 +423,15 @@ const RegistrationScreen = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
+      <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Retailer Registration</Text>
+          </View>
       <View style={styles.gradientBackground}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.headerTitle}>Retailer Registration</Text>
-
+          
           {/* Personal Information */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Personal Information</Text>

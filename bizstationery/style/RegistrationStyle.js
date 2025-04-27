@@ -5,6 +5,7 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
   },
   gradientBackground: {
     flex: 1,
@@ -17,45 +18,72 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFFFF',
-    marginBottom: 30,
+    color: '#FFF',
+    padding:20,
+    // marginBottom: 30,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.25)',
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 6,
+    alignSelf:'center'
+  },
+  headerTitleContainer:{
+    backgroundColor:'#6B48FF',
+    borderBottomStartRadius:20,
+    borderBottomEndRadius:20
   },
   section: {
     width: '100%',
     marginBottom: 30,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#6B48FF',
+    shadowOffset: { width: 5, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 1,
+    borderLeftWidth:3,
+    borderRightWidth:3,
+    borderLeftColor:'#6B48FF',
+    borderRightColor:'#6B48FF'
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#FFFFF',
+    color: '#6B48FF',
     marginBottom: 15,
-    textAlign: 'left',
   },
   input: {
-    width: width * 0.9,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
+    width: '100%',
+    backgroundColor: '#F9F9F9',
+    borderRadius: 10,
     padding: 15,
     marginBottom: 15,
     fontSize: 16,
-    color: '#333',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    color: '#111',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    marginBottom: 5,
+    alignSelf: 'flex-start',
+    marginLeft: 10,
   },
   nextBottonContainer: {
     alignSelf: 'center',
-    backgroundColor: '#FFFFF',
+    backgroundColor: '#FFFFFF',
     paddingVertical: 10,
     paddingHorizontal: 30,
-    borderRadius: 20,
+    borderRadius: 25,
     marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   nextBottonText: {
     color: '#6B48FF',
@@ -63,44 +91,38 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   submitButton: {
-    marginTop: 20,
-    borderRadius: 30,
+    marginTop: 30,
+    borderRadius: 10,
     overflow: 'hidden',
-    width: width * 0.9,
+    width: width * 0.6,
+    alignSelf: 'center',
   },
   buttonGradient: {
     paddingVertical: 15,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#FFFFF',
+    color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontWeight: '700',
+    letterSpacing: 1,
   },
-  // Added for error messages
-  errorText: {
-    color: '#FF4444',
-    fontSize: 15,
-    marginBottom: 10,
-    alignSelf: 'flex-start',
-    marginLeft: 10,
-  },
-
-  // Added for OTP verification
   sendOTPButton: {
     backgroundColor: '#423CF5',
-    paddingTop: 5,
+    paddingVertical: 8,
     width: 90,
     borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-
-  gstinButton:{
+  gstinButton: {
     backgroundColor: '#423CF5',
-    paddingTop: 5,
+    paddingVertical: 8,
     width: 123,
     borderRadius: 10,
-  }
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
 
 export default styles;
