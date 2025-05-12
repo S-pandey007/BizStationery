@@ -152,7 +152,7 @@ const ProductDetail = ({ route }) => {
           selectedVariant?._id === item._id && styles.selectedVariantText,
         ]}
       >
-        {item.attributes.quality.charAt(0).toUpperCase() + item.attributes.quality.slice(1)}
+        {item?.attributes?.quality?.charAt(0).toUpperCase() + item?.attributes?.quality?.slice(1)}
       </Text>
     </TouchableOpacity>
   );
