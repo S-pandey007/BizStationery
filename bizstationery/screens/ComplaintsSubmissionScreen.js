@@ -60,6 +60,11 @@ const ComplaintsSubmissionScreen = () => {
     }
   }, []);
 
+  useEffect(()=>{
+    fetchOrders();
+      fetchProductCategories();
+  },[])
+
   // Changed: Fetch complaints by retailerId
   const fetchComplaints = async (retailerId) => {
     try {
@@ -94,6 +99,7 @@ const ComplaintsSubmissionScreen = () => {
       });
       if (!response.ok) throw new Error("Failed to fetch orders");
       const data = await response.json();
+      console.log("orders data :", data.orders);
       setOrderOptions(data.orders || []);
     } catch (error) {
       console.error("Error fetching orders:", error);

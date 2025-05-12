@@ -71,7 +71,7 @@ const SettingsScreen = () => {
       {/* Settings Content */}
       <ScrollView style={styles.content}>
         {/* Account Settings */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={[styles.sectionTitle, isDarkTheme && styles.darkText]}>
             Account Settings
           </Text>
@@ -88,7 +88,7 @@ const SettingsScreen = () => {
           <TouchableOpacity style={styles.button} onPress={handleLogOut}>
             <Text style={styles.buttonText}>Log Out</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
 
         {/* Notification Preferences */}
         <View style={styles.section}>
@@ -152,11 +152,11 @@ const SettingsScreen = () => {
               App Version: 1.0.0
             </Text>
           </View>
-          <View style={styles.settingItem}>
+          {/* <View style={styles.settingItem}>
             <Text style={[styles.settingLabel, isDarkTheme && styles.darkText]}>
               Description: Manage your products and complaints easily.
             </Text>
-          </View>
+          </View> */}
           <View style={styles.settingItem}>
             <Text style={[styles.settingLabel, isDarkTheme && styles.darkText]}>
               Contact: support@example.com
