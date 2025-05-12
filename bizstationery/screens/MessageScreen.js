@@ -1,209 +1,265 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-  FlatList,
-  Image,
-  ScrollView,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { Linking } from "react-native";
-import * as ImagePicker from 'expo-image-picker';
-import styles from "../style/MessageStyle";
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, FlatList, TextInput, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import io from 'socket.io-client';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constant from 'expo-constants';
 
-const MessageScreen = () => {
-  const navigation = useNavigation();
-    const [selectedImages, setSelectedImages] = useState([]); // State for selected images
+const BASE_URL = Constant.expoConfig.extra.API_URL;
+console.log('BASE_URL:', BASE_URL); // http://192.168.131.3:8001/
 
-  // Hardcoded chat messages for simplicity
-  const chatMessages = [
-    {
-      id: "1",
-      text: "I viewed your 350W Ceiling Fan Stator Winding Machine on 23 Feb, 11:53 pm",
-      sender: "user",
-      timestamp: "24 Feb",
-    },
-    {
-      id: "2",
-      text: "Thank you for showing interest in our product.\n\nSanghani Electricals, Rajkot (Gujrat)\nCeiling Fan Winding Machine\n\nKishorbhai Sanghani +91 9824840127",
-      sender: "wholesaler",
-      timestamp: "24 Feb",
-    },
-    {
-      id: "3",
-      text: "Hi Kishorbhai, can you call me?",
-      sender: "user",
-      timestamp: "24 Feb",
-    },
-  ];
+function MessageScreen({ route }) {
+  const [retailerId, setRetailerId] = useState(null);
+  const [wholesaler, setWholesaler] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messageText, setMessageText] = useState('');
+  const [socket, setSocket] = useState(null);
+  const flatListRef = useRef(null);
 
-  // Hardcoded latest messages for preview
-  const latestMessages = [
-    {
-      id: "1",
-      text: "New offer on Ceiling Fan Winding Machine!",
-      sender: "wholesaler",
-      timestamp: "25 Feb, 10:00 AM",
-    },
-    {
-      id: "2",
-      text: "Confirm your order details.",
-      sender: "wholesaler",
-      timestamp: "25 Feb, 9:45 AM",
-    },
-  ];
+  // Fetch retailerId from AsyncStorage
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('userData');
+        if (userData) {
+          const parsedData = JSON.parse(userData);
+          console.log('Fetched userData:', parsedData);
+          setRetailerId(parsedData._id);
+        } else {
+          console.log('No userData found in AsyncStorage');
+          Alert.alert('Error', 'Please log in again');
+        }
+      } catch (error) {
+        console.error('Error fetching userData:', error);
+        Alert.alert('Error', 'Failed to load user data');
+      }
+    };
+    fetchUserData();
+  }, []);
 
-  // State for the message input
-  const [message, setMessage] = useState("");
+  // Fetch wholesaler details
+  useEffect(() => {
+    const fetchWholesaler = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}wholesaler/fetch`);
+        console.log('Fetched wholesaler:', response.data);
+        setWholesaler(response.data);
+      } catch (error) {
+        console.error('Error fetching wholesaler:', error.response?.data || error.message);
+        Alert.alert('Error', 'Failed to load wholesaler details');
+      }
+    };
+    fetchWholesaler();
+  }, []); // Run once on mount
 
-  // Functions to handle call, message, and email actions
-  const handleCall = () => {
-    Linking.openURL("tel:+919770337151");
-  };
+  // Initialize Socket.io
+  useEffect(() => {
+    if (!retailerId) return;
 
-  const handleEmail = () => {
-    Linking.openURL("mailto:shubhampandey8663@gmail.com");
-  };
+    const socketInstance = io(BASE_URL, {
+      query: { userId: retailerId },
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      forceNew: false, // Reuse connection
+    });
+    setSocket(socketInstance);
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      console.log("Message sent:", message);
-      setMessage(""); // Clear input after sending (placeholder logic)
+    socketInstance.on('connect', () => {
+      console.log('Socket connected:', retailerId);
+    });
+    socketInstance.on('connect_error', (error) => {
+      console.error('Socket connect error:', error);
+    });
+
+    socketInstance.on('receiveMessage', (message) => {
+      console.log('Received message:', message);
+      setMessages((prevMessages) => {
+        if (!prevMessages.some((msg) => msg._id === message._id)) {
+          return [...prevMessages, message];
+        }
+        return prevMessages;
+      });
+    });
+
+    socketInstance.on('error', (error) => {
+      console.error('Socket error:', error);
+      Alert.alert('Error', error.message || 'Failed to connect');
+    });
+
+    return () => {
+      socketInstance.disconnect();
+      console.log('Socket disconnected:', retailerId);
+    };
+  }, [retailerId]); // Depend only on retailerId
+
+  // Fetch chat history
+  useEffect(() => {
+    if (!wholesaler || !retailerId) return;
+
+    const fetchMessages = async () => {
+      const chatId = [wholesaler._id, retailerId].sort().join('_');
+      try {
+        const response = await axios.get(`${BASE_URL}messages/${chatId}`);
+        setMessages(response.data.messages);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        Alert.alert('Error', 'Failed to load messages');
+      }
+    };
+    fetchMessages();
+  }, [wholesaler, retailerId]); // Run when wholesaler or retailerId changes
+
+  // Scroll to bottom when messages update
+  useEffect(() => {
+    if (messages.length > 0) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
+
+  // Send message
+  const sendMessage = () => {
+    if (messageText.trim() && socket && wholesaler && retailerId) {
+      const messageData = {
+        senderId: retailerId,
+        receiverId: wholesaler._id,
+        content: messageText,
+      };
+      console.log('Sending message:', messageData);
+      socket.emit('sendMessage', messageData);
+      setMessageText('');
+    } else {
+      console.log('Cannot send message:', { messageText, socket: !!socket, wholesaler: !!wholesaler, retailerId });
+      Alert.alert('Error', 'Cannot send message. Please try again.');
     }
   };
 
-
+  // Render each message
   const renderMessage = ({ item }) => (
     <View
       style={[
-        styles.messageContainer,
-        item.sender === "user" ? styles.userMessage : styles.wholesalerMessage,
+        styles.messageBubble,
+        item.senderId === retailerId ? styles.sentMessage : styles.receivedMessage,
       ]}
     >
-      <Text style={styles.messageText}>{item.text}</Text>
-      <Text style={styles.timestamp}>{item.timestamp}</Text>
+      <Text style={styles.messageText}>{item.content}</Text>
+      <Text style={styles.messageTime}>
+        {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </Text>
     </View>
   );
 
-  const renderLatestMessage = ({ item }) => (
-    <View style={styles.latestMessageContainer}>
-      <Text style={styles.latestMessageText}>{item.text}</Text>
-      <Text style={styles.latestTimestamp}>{item.timestamp}</Text>
-    </View>
-  );
+  if (!retailerId || !wholesaler) {
+    return <View style={styles.container}><Text>Loading...</Text></View>;
+  }
 
-  const pickImages = async () => {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
-        alert('Permission to access gallery is required!');
-        return;
-      }
-  
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true, // Enable multiple selection
-        quality: 1,
-      });
-  
-      if (!result.canceled) {
-        const newImages = result.assets.map(asset => ({
-          uri: asset.uri,
-          fileName: asset.fileName || `image-${Date.now()}.jpg`,
-        }));
-        setSelectedImages(prevImages => [...prevImages, ...newImages]);
-      }
-    };
-
-    console.log(selectedImages);
-    
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
+    <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>MH Traders</Text>
-          {/* <Text style={styles.headerSubtitle}>Rajkot, Gujarat • ⭐ 4.4</Text> */}
-        </View>
-        <TouchableOpacity onPress={handleCall}>
-          <Ionicons name="call" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Latest Messages Section */}
-      <FlatList
-        data={latestMessages}
-        renderItem={renderLatestMessage}
-        keyExtractor={(item) => item.id}
-        horizontal
-        style={styles.latestMessages} // Move style to FlatList
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ padding: 8 }} // Add padding if needed
-      />
-
-      {/* Chat Area */}
-      <FlatList
-        data={chatMessages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.chatContainer}
-        showsVerticalScrollIndicator={false}
-      />
-
-      {/* Action Buttons */}
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={styles.actionButton} onPress={handleCall}>
-          <Ionicons name="call-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.actionButtonText}>Call</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleSendMessage}
-        >
-          <Ionicons name="chatbubble-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.actionButtonText}>Message</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={handleEmail}>
-          <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.actionButtonText}>Email</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Message Input with File/Media Options */}
-      <View style={styles.inputContainer}>
-        <View style={styles.inputOptions}>
-          <TouchableOpacity onPress={pickImages} style={styles.optionButton}>
-            <Ionicons name="image" size={30} color="#6B48FF" />
-          </TouchableOpacity>
-        </View>
-        <TextInput
-          style={styles.input}
-          value={message}
-          onChangeText={setMessage}
-          placeholder="Write a message..."
-          placeholderTextColor="#A0A0A0"
+        <Image
+          source={{ uri: wholesaler.profileImage || 'https://via.placeholder.com/50' }}
+          style={styles.headerImage}
         />
-        <TouchableOpacity
-          style={styles.sendButton}
-          onPress={handleSendMessage}
-          disabled={!message.trim()}
-        >
-          <Ionicons
-            name="send"
-            size={20}
-            color={message.trim() ? "#FFFFFF" : "#A0A0A0"}
-          />
+        <View style={styles.headerText}>
+          <Text style={styles.headerName}>{wholesaler.name}</Text>
+        </View>
+      </View>
+
+      <FlatList
+        ref={flatListRef}
+        data={messages}
+        renderItem={renderMessage}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={styles.messageList}
+      />
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.messageInput}
+          placeholder="Type a message..."
+          value={messageText}
+          onChangeText={setMessageText}
+        />
+        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+          <Ionicons name="send" size={24} color="#6B48FF" />
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
-};
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#6B48FF',
+    elevation: 2,
+  },
+  headerImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  headerText: { flex: 1 },
+  headerName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  headerShop: {
+    fontSize: 14,
+    color: '#e0e0e0',
+    marginTop: 2,
+  },
+  messageList: {
+    padding: 10,
+    flexGrow: 1,
+  },
+  messageBubble: {
+    maxWidth: '80%',
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  sentMessage: {
+    backgroundColor: '#D5CDF6',
+    alignSelf: 'flex-end',
+  },
+  receivedMessage: {
+    backgroundColor: '#fff',
+    alignSelf: 'flex-start',
+  },
+  messageText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  messageTime: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'right',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  messageInput: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: '#f1f1f1',
+    marginRight: 10,
+  },
+  sendButton: {
+    padding: 10,
+  },
+});
 
 export default MessageScreen;
