@@ -64,7 +64,8 @@ const HomeScreen = () => {
       // console.log("featured data", featuredDataResponse.products);
       setFeaturedData(featuredDataResponse.products || []);
 
-      // Fetch product cart
+      // Fetch produc p
+      // cart
       const cartResponse = await fetch(`${BASE_URL}product/productCart`);
       const cartData = await cartResponse.json();
       // console.log("product cart data", cartData.products[0]);
